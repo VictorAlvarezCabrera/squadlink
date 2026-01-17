@@ -1,0 +1,72 @@
+services:
+  # Base de datos MySQL
+  mysql:
+    image: mysql:8.0
+    platform: linux/amd64
+    container_name: squadlink-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    ports:
+      - "${MYSQL_PORT}:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      # Elimina temporalmente esta línea si tienes init.sql
+      # - ./backend/init.sql:/docker-entrypoint-initdb.d/init.sql
+    # AÑADE ESTAS OPCIONES PARA MAC M2
+    command: --default-authentication-plugin=mysql_native_password --innodb-use-native-aio=0
+    networks:
+      - squadlink-network
+
+  # Backend Node.js + Express
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: squadlink-backend
+    restart: unless-stopped
+    depends_on:
+      - mysql
+    environment:
+      DB_HOST: mysql
+      DB_USER: ${MYSQL_USER}
+      DB_PASSWORD: ${MYSQL_PASSWORD}
+      DB_NAME: ${MYSQL_DATABASE}
+      DB_PORT: 3306
+      NODE_ENV: development
+      PORT: ${BACKEND_PORT}
+    ports:
+      - "${BACKEND_PORT}:${BACKEND_PORT}"
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    networks:
+      - squadlink-network
+
+  # Frontend Flutter Web
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    container_name: squadlink-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    environment:
+      API_URL: http://localhost:${BACKEND_PORT}
+    ports:
+      - "${FRONTEND_PORT}:8080"
+    volumes:
+      - ./frontend:/app
+    networks:
+      - squadlink-network
+
+volumes:
+  mysql_data:
+
+networks:
+  squadlink-network:
+    driver: bridge
