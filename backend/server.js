@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
-const mysql = require('mysql2');
+require('dotenv').config();
+const db = require('./config/database');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -8,18 +9,7 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-// Función para conectar con reintentos
-let db;
 const connectWithRetry = () => {
-  const config = {
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME
-  };
-
-  db = mysql.createConnection(config);
-
   db.connect((err) => {
     if (err) {
       console.error('❌ Error conectando a MySQL:', err.message);
@@ -33,10 +23,18 @@ const connectWithRetry = () => {
 
 connectWithRetry();
 
-// Ruta de prueba
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'Backend funcionando' });
 });
+
+// Rutas
+const authRoutes = require('./routes/auth');
+const jugadoresRoutes = require('./routes/jugadores');
+const statsRoutes = require('./routes/stats');
+
+app.use('/api/auth', authRoutes);
+app.use('/api/jugadores', jugadoresRoutes);
+app.use('/api/stats', statsRoutes);
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Backend corriendo en http://localhost:${PORT}`);
