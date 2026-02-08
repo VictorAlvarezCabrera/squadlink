@@ -7,6 +7,7 @@ import Players from "./pages/Players.jsx";
 import Teams from "./pages/Teams.jsx";
 import Login from "./pages/Login.jsx";
 import Register from "./pages/Register.jsx";
+import PlayerProfile from "./pages/PlayerProfile.jsx";
 import "./index.css";
 
 function App() {
@@ -19,6 +20,7 @@ function App() {
         <Route path="/teams" element={<Teams />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/players/:id" element={<PlayerProfile />} />
       </Routes>
     </BrowserRouter>
   );

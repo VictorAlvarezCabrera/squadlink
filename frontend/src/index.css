@@ -175,3 +175,19 @@ button:disabled {
   margin-top: 10px;
 }
 
+.players-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.player-card {
+  border: 1px solid #ccc;
+  padding: 12px;
+  cursor: pointer;
+}
+
+.player-card h3 {
+  margin-top: 0;
+}

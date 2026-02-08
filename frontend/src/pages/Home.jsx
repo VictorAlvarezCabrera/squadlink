@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import PlayerCard from "../components/PlayerCard.jsx";
 
 export default function Home() {
   const [status, setStatus] = useState("Comprobando API...");
@@ -36,15 +37,11 @@ export default function Home() {
       {players.length === 0 ? (
         <p>No hay players todavía.</p>
       ) : (
-        <ul>
-          {players.map((p) => (
-            <li key={p.id}>
-              <strong>{p.nickname}</strong> — {p.game} — {p.role}
-              <br />
-              Rank: {p.rango || "-"} | Matches: {p.matches_played} | Wins: {p.wins} | KDA: {p.kda} | Winrate: {p.winrate}%
-            </li>
-          ))}
-        </ul>
+        <div className="players-grid">
+            {players.map((p) => (
+                <PlayerCard key={p.id} player={p} />
+            ))}
+        </div>
       )}
     </main>
   );
