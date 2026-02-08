@@ -4,6 +4,7 @@ const express = require("express");
 const cors = require("cors");
 const pool = require("./src/db/pool");
 const authRoutes = require("./src/routes/auth.routes");
+const playersRoutes = require("./src/routes/players.routes");;
 
 const app = express();
 
@@ -21,6 +22,7 @@ app.get("/db-test", async (req, res) => {
 });
 
 app.use("/auth", authRoutes);
+app.use("/players", playersRoutes);
 // Puerto
 const PORT = process.env.PORT || 3001;
 
