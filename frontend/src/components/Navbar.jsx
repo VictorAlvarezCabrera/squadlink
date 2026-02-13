@@ -9,11 +9,6 @@ export default function Navbar() {
       <Link className="nav-link" to="/champions">Campeones</Link>
       <Link className="nav-link" to="/login">Login</Link>
       <Link className="nav-link" to="/register">Register</Link>
-
-      <form className="search-player">
-        <input type="search" name="search-player" placeholder="Buscar jugadores" required/>
-        <button type="submit">Buscar</button>
-      </form>
       
     </nav>
   );

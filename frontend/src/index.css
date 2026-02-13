@@ -1,17 +1,64 @@
+:root {
+    /* --- CAPAS DE FONDO (DEPTH) --- */
+    --bg-main: #010a13;         /* El vacío oscuro de fondo */
+    --bg-card: #091428;         /* Contenedores de estadísticas y perfiles */
+    --bg-card-hover: #1e2328;   /* Feedback visual al pasar el ratón */
+    --bg-navbar: #050b13;       /* Barra de navegación superior */
+    --bg-input: #0a1428;        /* Fondo de la barra de búsqueda */
+
+    /* --- COLORES DE MARCA (HEXTECH & GOLD) --- */
+    --hextech-gold: #c8aa6e;    /* Dorado de prestigio para bordes y títulos */
+    --hextech-gold-dark: #785a28; /* Dorado apagado para estados deshabilitados */
+    --hextech-blue: #00cfbc;    /* Azul mágico para botones de acción o "Live" */
+    --hextech-blue-glow: rgba(0, 207, 188, 0.2); /* Resplandor para efectos de focus */
+
+    /* --- TIPOGRAFÍA --- */
+    --text-primary: #f0f2f5;    /* Títulos y nombres de invocador */
+    --text-secondary: #a0a5b1;  /* KDA, CS, nivel de campeones (menos importancia) */
+    --text-muted: #626a78;      /* Fechas de partidas o textos legales */
+
+    /* --- SEMÁNTICA DE PARTIDA (WIN / LOSS) --- */
+    --color-victory: #0094ff;   /* Azul brillante para el bloque de victoria */
+    --color-defeat: #e84057;    /* Rojo suave para el bloque de derrota */
+    --color-remake: #94a3b8;    /* Gris para partidas canceladas */
+
+    /* --- CATEGORÍAS DE DAÑO Y ESTADÍSTICAS --- */
+    --damage-physical: #f5a100; /* Naranja/Bronce para daño físico */
+    --damage-magic: #00bcff;    /* Azul cian para daño mágico */
+    --damage-true: #ffffff;     /* Blanco puro para daño verdadero */
+    --color-healing: #31d394;   /* Verde para curación realizada */
+
+    /* --- RANGOS Y TIER LIST (CALIDAD) --- */
+    --tier-s: #ff4e50;          /* Rango S (OP) */
+    --tier-a: #ff8c00;          /* Rango A */
+    --tier-b: #c4b5fd;          /* Rango B */
+    --tier-c: #94a3b8;          /* Rango C/D */
+
+    /* --- ROLES DE LIGA --- */
+    --role-top: #929292;
+    --role-jungle: #22c55e;
+    --role-mid: #f59e0b;
+    --role-adc: #3b82f6;
+    --role-support: #a855f7;
+
+    /* --- BORDES Y LÍNEAS DE SEPARACIÓN --- */
+    --border-thin: #1e232a;     /* Separadores casi invisibles entre filas */
+    --border-gold: #c8aa6e33;   /* Borde dorado con 20% de opacidad */
+    
+    /* --- SOMBRAS (SHADOWS) --- */
+    --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
 * {
     margin: 0; 
     padding: 0; 
     box-sizing: border-box;
-    color: var(--color-text-2);
+    color: var(--text-primary);
 }
 
-:root {
-    --color-text-1: #f0f2f5;
-    --color-text-2: #f0f2f5;
-    --background: #0a0e13;
-    --nav-color: #05070a;
-};
 
 body {
-    background-color: var(--background);
+    background-color: var(--bg-main);
+    font-family: 'Roboto', sans-serif;
+    color: var(--text-primary);
 }
