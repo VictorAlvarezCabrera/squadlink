@@ -1,11 +1,20 @@
 import { Link } from "react-router-dom";
+import "./Navbar.css";
 
 export default function Navbar() {
   return (
-    <nav>
-      <Link to="/">Home</Link> | <Link to="/players">Players</Link> |{" "}
-      <Link to="/teams">Teams</Link> | <Link to="/login">Login</Link> |{" "}
-      <Link to="/register">Register</Link>
+    <nav className="navbar">
+      <Link className="nav-link" to="/">Inicio</Link>
+      <Link className="nav-link" to="/stats">Estadisticas</Link>
+      <Link className="nav-link" to="/champions">Campeones</Link>
+      <Link className="nav-link" to="/login">Login</Link>
+      <Link className="nav-link" to="/register">Register</Link>
+
+      <form className="search-player">
+        <input type="search" name="search-player" placeholder="Buscar jugadores" required/>
+        <button type="submit">Buscar</button>
+      </form>
+      
     </nav>
   );
 }
