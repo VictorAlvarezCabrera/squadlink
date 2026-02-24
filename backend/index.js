@@ -9,12 +9,18 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// RUTA DE TEST RIOT
+// RUTAS
 const featuredRouter = require("./src/routes/featured.routes");
 const riotTestRouter = require("./src/routes/riotTest.routes");
+const championsRouter = require("./src/routes/champions.routes");
+const authRouter = require("./src/routes/auth.routes");
+const playersRouter = require("./src/routes/players.routes");
 
 app.use("/api/featured", featuredRouter);
 app.use("/api/riot-test", riotTestRouter);
+app.use("/api/champions", championsRouter);
+app.use("/api/auth", authRouter);
+app.use("/api/players", playersRouter);
 
 app.get("/", (req, res) => {
   res.send("Backend funcionando");

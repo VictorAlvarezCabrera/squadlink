@@ -9,7 +9,7 @@
   margin-bottom: 18px;
 }
 
-#tittleChampionPage{ margin: 0; }
+#tittleChampionPage{ margin: 0; color:var(--hextech-gold)}
 
 .champions-subtitle{
   margin-top: 10px;

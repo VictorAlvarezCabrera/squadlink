@@ -50,10 +50,13 @@ export default function ChampionCompareModal({ ids, onClose }) {
           fetch(`http://localhost:3001/api/champions/${b}`),
         ]);
 
+        if (!ra.ok) throw new Error(`Error ${ra.status}: No se pudo cargar el campeón A`);
+        if (!rb.ok) throw new Error(`Error ${rb.status}: No se pudo cargar el campeón B`);
+
         const [ja, jb] = await Promise.all([ra.json(), rb.json()]);
 
-        if (!ra.ok || !ja.ok) throw new Error(ja?.error || "Error cargando campeón A");
-        if (!rb.ok || !jb.ok) throw new Error(jb?.error || "Error cargando campeón B");
+        if (!ja.ok) throw new Error(ja?.error || "Error cargando campeón A");
+        if (!jb.ok) throw new Error(jb?.error || "Error cargando campeón B");
 
         if (!cancelled) {
           setLeft(ja.champion);
