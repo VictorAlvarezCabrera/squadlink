@@ -3,11 +3,15 @@ import { NextResponse } from "next/server";
 
 import { adminRoutes, demoAuthCookie, protectedRoutes } from "@/lib/constants";
 import { isDemoMode } from "@/lib/env";
+import { createProxySupabaseClient } from "@/lib/supabase/proxy";
 
-export function proxy(request: NextRequest) {
+function matchesRoute(pathname: string, routes: string[]) {
+  return routes.some((route) => pathname === route || pathname.startsWith(`${route}/`));
+}
+
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
-
-  const needsProtection = protectedRoutes.some((route) => pathname === route || pathname.startsWith(`${route}/`));
+  const needsProtection = matchesRoute(pathname, protectedRoutes);
 
   if (!needsProtection) {
     return NextResponse.next();
@@ -19,12 +23,35 @@ export function proxy(request: NextRequest) {
       return NextResponse.redirect(new URL("/login", request.url));
     }
 
-    if (adminRoutes.some((route) => pathname === route || pathname.startsWith(`${route}/`)) && viewer !== "profile_admin") {
+    if (matchesRoute(pathname, adminRoutes) && viewer !== "profile_admin") {
+      return NextResponse.redirect(new URL("/dashboard", request.url));
+    }
+
+    return NextResponse.next();
+  }
+
+  const { supabase, response } = createProxySupabaseClient(request);
+  if (!supabase) {
+    return NextResponse.redirect(new URL("/login", request.url));
+  }
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return NextResponse.redirect(new URL("/login", request.url));
+  }
+
+  if (matchesRoute(pathname, adminRoutes)) {
+    const { data: profile } = await supabase.from("profiles").select("role").eq("user_id", user.id).maybeSingle<{ role: string }>();
+
+    if (!profile || profile.role !== "admin") {
       return NextResponse.redirect(new URL("/dashboard", request.url));
     }
   }
 
-  return NextResponse.next();
+  return response;
 }
 
 export const config = {

@@ -32,7 +32,16 @@ insert into public.profiles (id, user_id, role, nick, full_name, bio, timezone, 
   ('30000000-0000-0000-0000-000000000004', '00000000-0000-0000-0000-000000000004', 'leader', 'InesAnchor', 'Inés Muñoz', 'Capitana de club en FC y organizadora de eventos semanales.', 'Europe/Madrid', '10000000-0000-0000-0000-000000000002', 88),
   ('30000000-0000-0000-0000-000000000005', '00000000-0000-0000-0000-000000000005', 'player', 'HugoOrbit', 'Hugo Cervera', 'Veterano de Destiny 2 enfocado en raids y dungeons.', 'Europe/Madrid', '10000000-0000-0000-0000-000000000001', 90),
   ('30000000-0000-0000-0000-000000000006', '00000000-0000-0000-0000-000000000006', 'player', 'AsterLink', 'Aster Vega', 'Perfil demo creado para probar el flujo de registro.', 'Europe/Madrid', '10000000-0000-0000-0000-000000000001', 76)
-on conflict (id) do nothing;
+on conflict (user_id) do update
+set
+  id = excluded.id,
+  role = excluded.role,
+  nick = excluded.nick,
+  full_name = excluded.full_name,
+  bio = excluded.bio,
+  timezone = excluded.timezone,
+  main_platform_id = excluded.main_platform_id,
+  reliability_score = excluded.reliability_score;
 
 insert into public.profile_languages (profile_id, language_code) values
   ('30000000-0000-0000-0000-000000000001', 'es'),

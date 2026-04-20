@@ -1,5 +1,6 @@
 import { profiles as demoProfiles } from "@/data/demo";
 import { AppError } from "@/lib/app-error";
+import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import type { Profile, PlatformCode } from "@/types/domain";
 
@@ -26,12 +27,87 @@ export interface ProfileUpdateInput {
   availability: Profile["availability"];
 }
 
-export async function bootstrapProfile() {
-  return ensureBootstrapProfile();
+export async function getProfileByUserId(userId: string, email = "") {
+  if (isDemoMode) {
+    return demoProfiles.find((profile) => profile.authUserId === userId || profile.email === email) ?? null;
+  }
+
+  const supabase = await createServerSupabaseClient();
+  if (!supabase) {
+    return null;
+  }
+
+  const { data: profileRow } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("user_id", userId)
+    .maybeSingle<ProfileRow>();
+
+  return profileRow ? getProfileByRow(profileRow, email) : null;
+}
+
+export async function bootstrapProfile(input?: {
+  userId?: string;
+  email?: string;
+  userMetadata?: Record<string, unknown> | null;
+}) {
+  if (isDemoMode) {
+    return ensureBootstrapProfile();
+  }
+
+  const admin = createAdminSupabaseClient();
+  if (input?.userId && admin) {
+    const { error } = await admin.rpc("ensure_profile_for_user", {
+      target_user_id: input.userId,
+      target_email: input.email ?? `${input.userId}@local.invalid`,
+      target_meta: input.userMetadata ?? {},
+    });
+
+    if (error) {
+      throw new AppError(error.message, 500);
+    }
+
+    const { data: profileRow } = await admin.from("profiles").select("*").eq("user_id", input.userId).maybeSingle<ProfileRow>();
+    if (!profileRow) {
+      throw new AppError("No se pudo crear o recuperar el perfil.", 500);
+    }
+
+    return getProfileByRow(profileRow, input.email ?? "");
+  }
+
+  const authed = await ensureAuthedUser();
+  const userId = input?.userId ?? authed.user.id;
+  const email = input?.email ?? authed.user.email ?? `${authed.user.id}@local.invalid`;
+  const userMetadata = input?.userMetadata ?? authed.user.user_metadata ?? {};
+
+  if (admin) {
+    const { error } = await admin.rpc("ensure_profile_for_user", {
+      target_user_id: userId,
+      target_email: email,
+      target_meta: userMetadata,
+    });
+
+    if (error) {
+      throw new AppError(error.message, 500);
+    }
+  }
+
+  const profile = await getProfileByUserId(userId, email);
+  if (!profile) {
+    throw new AppError("No se pudo crear o recuperar el perfil.", 500);
+  }
+
+  return profile;
 }
 
 export async function getViewerProfile() {
-  return ensureBootstrapProfile();
+  if (isDemoMode) {
+    return ensureBootstrapProfile();
+  }
+
+  const authed = await ensureAuthedUser();
+  const profile = await getProfileByUserId(authed.user.id, authed.user.email ?? "");
+  return profile ?? bootstrapProfile();
 }
 
 export async function getProfileByNick(nick: string) {
@@ -67,7 +143,11 @@ export async function updateMyProfile(input: ProfileUpdateInput) {
   }
 
   const authed = await ensureAuthedUser();
-  const profile = await ensureBootstrapProfile();
+  const profile = await getViewerProfile();
+  if (!profile) {
+    throw new AppError("Perfil no disponible.", 404);
+  }
+
   const catalog = await getCatalogRows();
   const mainPlatformId = catalog?.platforms.find((platform) => platform.code === input.mainPlatform)?.id ?? null;
 

@@ -19,14 +19,6 @@ begin
 end;
 $$;
 
-create or replace function public.current_profile_id()
-returns uuid
-language sql
-stable
-as $$
-  select id from public.profiles where user_id = auth.uid() limit 1
-$$;
-
 create table if not exists public.games (
   id uuid primary key default gen_random_uuid(),
   name text not null,
@@ -57,6 +49,14 @@ create table if not exists public.profiles (
   created_at timestamptz not null default timezone('utc', now()),
   updated_at timestamptz not null default timezone('utc', now())
 );
+
+create or replace function public.current_profile_id()
+returns uuid
+language sql
+stable
+as $$
+  select id from public.profiles where user_id = auth.uid() limit 1
+$$;
 
 create table if not exists public.profile_languages (
   id uuid primary key default gen_random_uuid(),

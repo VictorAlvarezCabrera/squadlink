@@ -9,7 +9,13 @@
     "lint": "eslint . --max-warnings=0",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "local:up": "node scripts/local-stack.mjs up",
+    "local:down": "node scripts/local-stack.mjs down",
+    "local:migrate": "node scripts/local-stack.mjs migrate",
+    "local:seed": "node scripts/local-stack.mjs seed",
+    "local:reset": "node scripts/local-stack.mjs reset",
+    "local:logs": "node scripts/local-stack.mjs logs"
   },
   "dependencies": {
     "@base-ui/react": "^1.4.0",
@@ -22,6 +28,7 @@
     "lucide-react": "^1.8.0",
     "next": "16.2.4",
     "next-themes": "^0.4.6",
+    "pnpm": "^10.33.0",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "react-hook-form": "^7.72.1",

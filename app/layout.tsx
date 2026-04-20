@@ -26,9 +26,9 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
   return (
     <html lang="es" className={`${sans.variable} ${mono.variable} h-full`}>
-      <body className="min-h-full bg-slate-950 text-white antialiased">
+      <body className="min-h-full bg-black text-white antialiased">
         <Providers>
-          <div className="min-h-screen bg-[linear-gradient(180deg,rgba(15,23,42,0.96)_0%,rgba(2,6,23,1)_100%)]">
+          <div className="min-h-screen">
             <SiteHeader />
             <main className="mx-auto min-h-[calc(100vh-144px)] max-w-7xl px-4 py-10 sm:px-6 lg:px-8">{children}</main>
             <SiteFooter />

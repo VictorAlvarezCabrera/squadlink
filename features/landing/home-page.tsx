@@ -17,22 +17,23 @@ export async function HomePage() {
 
   return (
     <div className="space-y-24 pb-24">
-      <section className="overflow-hidden border-b border-white/10 bg-[radial-gradient(circle_at_top_left,_rgba(251,191,36,0.18),_transparent_30%),linear-gradient(135deg,#020617_0%,#0f172a_60%,#111827_100%)]">
-        <div className="mx-auto grid max-w-7xl gap-12 px-4 py-20 sm:px-6 lg:grid-cols-[1.1fr_0.9fr] lg:px-8 lg:py-28">
+      <section className="overflow-hidden border-b border-white/10">
+        <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 md:py-20 lg:px-8 lg:py-24">
+          <div className="grid gap-12 rounded-[2rem] border border-red-500/20 bg-[linear-gradient(140deg,rgba(28,12,14,0.95)_0%,rgba(12,12,13,0.98)_58%,rgba(8,8,8,1)_100%)] p-6 sm:p-8 lg:grid-cols-[1.1fr_0.9fr] lg:p-10">
           <div className="space-y-8">
-            <Badge className="bg-amber-400/15 text-amber-100">MVP serio para DAW con Next.js + Supabase</Badge>
+            <Badge className="bg-red-500/15 text-red-100">MVP serio para DAW con Next.js + Supabase</Badge>
             <div className="space-y-5">
-              <h1 className="max-w-3xl text-5xl font-semibold tracking-tight text-white sm:text-6xl">
+              <h1 className="max-w-3xl text-4xl font-semibold tracking-tight text-white sm:text-5xl lg:text-6xl">
                 Encuentra el clan adecuado, organiza squads y mide el encaje antes de entrar.
               </h1>
-              <p className="max-w-2xl text-lg leading-8 text-slate-300">
+              <p className="max-w-2xl text-lg leading-8 text-zinc-300">
                 SquadLink conecta jugadores y clanes por juego, plataforma, horario, idioma, rol y fiabilidad.
                 Sin ruido de red social. Con lógica defendible.
               </p>
             </div>
             <div className="flex flex-wrap gap-3">
               <Link href="/registro">
-                <Button size="lg" className="bg-amber-400 text-slate-950 hover:bg-amber-300">
+                <Button size="lg" className="bg-red-500 text-white hover:bg-red-400">
                   Crear cuenta
                 </Button>
               </Link>
@@ -49,9 +50,9 @@ export async function HomePage() {
             </div>
           </div>
 
-          <div className="grid gap-4 rounded-[2rem] border border-white/10 bg-white/5 p-4 shadow-2xl shadow-black/30">
+          <div className="grid gap-4 rounded-[1.5rem] border border-white/10 bg-black/35 p-4">
             {featuredClans.map((clan: Clan) => (
-              <Card key={clan.id} className="border-white/10 bg-slate-950/70 text-white">
+              <Card key={clan.id} className="border-white/10 bg-black/50 text-white">
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <CardTitle>{clan.name}</CardTitle>
@@ -61,20 +62,21 @@ export async function HomePage() {
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <p className="text-sm text-slate-300">{clan.tagline}</p>
-                  <div className="flex flex-wrap gap-2 text-xs text-slate-300">
+                  <p className="text-sm text-zinc-300">{clan.tagline}</p>
+                  <div className="flex flex-wrap gap-2 text-xs text-zinc-300">
                     {clan.languages.map((language: string) => (
-                      <Badge key={language} variant="outline" className="border-white/10 text-slate-200">
+                      <Badge key={language} variant="outline" className="border-white/10 text-zinc-200">
                         {language.toUpperCase()}
                       </Badge>
                     ))}
                   </div>
-                  <Link href={`/clanes/${clan.slug}`} className="text-sm font-medium text-amber-300">
+                  <Link href={`/clanes/${clan.slug}`} className="text-sm font-medium text-red-300">
                     Ver detalle
                   </Link>
                 </CardContent>
               </Card>
             ))}
+          </div>
           </div>
         </div>
       </section>
@@ -106,8 +108,8 @@ export async function HomePage() {
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-3xl border border-white/10 bg-white/5 p-5">
-      <p className="text-sm text-slate-300">{label}</p>
+    <div className="rounded-3xl border border-white/10 bg-black/35 p-5">
+      <p className="text-sm text-zinc-300">{label}</p>
       <p className="mt-2 text-3xl font-semibold text-white">{value}</p>
     </div>
   );
@@ -115,12 +117,12 @@ function Stat({ label, value }: { label: string; value: string }) {
 
 function FeatureCard({ title, description }: { title: string; description: string }) {
   return (
-    <Card className="border-white/10 bg-white/5 text-white">
+    <Card className="border-white/10 bg-black/35 text-white">
       <CardHeader>
         <CardTitle>{title}</CardTitle>
       </CardHeader>
       <CardContent>
-        <p className="leading-7 text-slate-300">{description}</p>
+        <p className="leading-7 text-zinc-300">{description}</p>
       </CardContent>
     </Card>
   );

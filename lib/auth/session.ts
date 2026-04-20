@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 
 import { authFixtures, profiles } from "@/data/demo";
 import { demoAuthCookie } from "@/lib/constants";
+import { isDemoMode } from "@/lib/env";
 import type { AppRole, Profile } from "@/types/domain";
 import { getViewerProfile as getViewerProfileFromService } from "@/services/profile-service";
 
@@ -15,15 +16,23 @@ export interface Viewer {
 }
 
 export async function getViewer(): Promise<Viewer | null> {
-  const cookieStore = await cookies();
-  const demoProfile = profileById(cookieStore.get(demoAuthCookie)?.value);
+  if (isDemoMode) {
+    const cookieStore = await cookies();
+    const demoProfile = profileById(cookieStore.get(demoAuthCookie)?.value);
 
-  if (demoProfile) {
-    return { profile: demoProfile };
+    if (demoProfile) {
+      return { profile: demoProfile };
+    }
+
+    return null;
   }
 
-  const profile = await getViewerProfileFromService();
-  return profile ? { profile } : null;
+  try {
+    const profile = await getViewerProfileFromService();
+    return profile ? { profile } : null;
+  } catch {
+    return null;
+  }
 }
 
 export async function requireViewer(redirectTo = "/login") {

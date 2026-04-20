@@ -45,7 +45,8 @@ begin
   end if;
 end $$;
 
-drop index if exists public.clan_join_requests_clan_id_profile_id_status_key;
+alter table if exists public.clan_join_requests
+  drop constraint if exists clan_join_requests_clan_id_profile_id_status_key;
 create unique index if not exists idx_clan_join_requests_single_pending
   on public.clan_join_requests(clan_id, profile_id)
   where status = 'pending';

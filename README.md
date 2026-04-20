@@ -2,54 +2,219 @@
 
 SquadLink es una plataforma web multijuego para crear clanes, reclutar jugadores, gestionar eventos, publicar LFG, reportar contenido y recomendar clanes compatibles.
 
-## Stack
+## Estrategia local
 
-- Next.js 16 App Router
-- TypeScript
-- Tailwind CSS v4
-- shadcn/ui
-- Supabase Auth
-- Supabase PostgreSQL
-- RLS
-- Server Actions
-- Route Handlers
-- Zod
-- Vitest
+El proyecto mantiene Supabase, pero ejecutado en local con Docker Compose. Se ha elegido esta vía porque la app ya depende de `@supabase/supabase-js`, `@supabase/ssr`, `auth.users`, RLS y PostgREST. Reescribir auth y permisos sobre PostgreSQL puro habría roto bastante más el repo.
 
-## Estado actual
+El stack local levanta:
 
-El frontend existente se mantiene y ahora puede trabajar en dos modos:
+- PostgreSQL local con la imagen oficial de Supabase
+- GoTrue para auth
+- PostgREST para `/rest/v1`
+- Nginx como gateway local para `/auth/v1` y `/rest/v1`
+- Mailpit para correos de recuperación en desarrollo
 
-- `demo`: usa `data/demo.ts` como fallback local desacoplado.
-- `supabase`: usa autenticación real, persistencia real y RLS.
+## Requisitos previos
 
-## Instalación
+- Node.js 20+
+- npm
+- Docker Desktop abierto y completamente arrancado
+
+## Archivo de variables que debes usar
+
+El archivo canónico del entorno local es `/.env`.
+
+Pasos:
+
+1. Copia [`.env.example`](/C:/Users/victor/Desktop/Proyecto%20DAW/SquadLink/.env.example:1) a `.env`
+2. Si usas `npm run local:up`, el script sincroniza automáticamente `/.env.local` con las variables compartidas que necesita Next.js
+
+Notas:
+
+- `docker compose up -d` leerá `/.env` automáticamente
+- `npm run local:up` también usa `/.env` y falla con un mensaje claro si falta o tiene variables obligatorias vacías
+- `/.env.local` sigue sirviendo para Next.js, pero ya no es el archivo base de Docker
+
+## Variables principales
+
+- `NEXT_PUBLIC_APP_URL=http://localhost:3000`
+- `NEXT_PUBLIC_APP_MODE=supabase`
+- `NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:55421`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY=...`
+- `SUPABASE_SERVICE_ROLE_KEY=...`
+- `POSTGRES_PASSWORD=postgres`
+- `JWT_SECRET=...`
+- `JWT_EXPIRY=3600`
+- `LOCAL_DB_PORT=55432`
+- `LOCAL_SUPABASE_PORT=55421`
+- `MAILPIT_SMTP_PORT=1025`
+- `MAILPIT_UI_PORT=8025`
+
+## Puertos por defecto
+
+- App Next.js: `3000`
+- Supabase gateway local: `55421`
+- PostgreSQL local: `55432`
+- Mailpit SMTP: `1025`
+- Mailpit UI: `8025`
+
+Se usan `55421/55432` por defecto para evitar choques frecuentes con otras instalaciones locales de Supabase, PostgreSQL o herramientas que ya ocupan el rango `5432x`.
+
+## Arranque local
+
+### Caso feliz
+
+1. Abre Docker Desktop
+2. Copia `/.env.example` a `/.env`
+3. Ejecuta:
 
 ```bash
 npm install
-```
-
-## Variables de entorno
-
-Consulta `.env.example`.
-
-Variables principales:
-
-- `NEXT_PUBLIC_APP_URL`
-- `NEXT_PUBLIC_APP_MODE`
-- `NEXT_PUBLIC_SUPABASE_URL`
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-- `SUPABASE_SERVICE_ROLE_KEY`
-- `RAWG_API_KEY`
-- `CHEAPSHARK_BASE_URL`
-
-## Desarrollo
-
-```bash
+npm run local:up
+npm run local:migrate
+npm run local:seed
 npm run dev
 ```
 
-## Verificación
+La app queda en:
+
+- [http://localhost:3000](http://localhost:3000)
+
+Servicios locales:
+
+- gateway: [http://127.0.0.1:55421](http://127.0.0.1:55421)
+- postgres: `postgresql://postgres:postgres@127.0.0.1:55432/postgres`
+- mailpit: [http://127.0.0.1:8025](http://127.0.0.1:8025)
+
+### Arranque directo con Docker Compose
+
+Si prefieres no usar el script:
+
+```bash
+docker compose up -d --remove-orphans
+npm run local:migrate
+npm run local:seed
+npm run dev
+```
+
+Esto funciona siempre que `/.env` exista y tenga las variables obligatorias.
+
+## Qué hace `npm run local:up`
+
+`local:up` ya no se limita a hacer `docker compose up`. Ahora hace esto:
+
+1. valida `/.env`
+2. sincroniza `/.env.local` para Next.js
+3. comprueba que Docker Desktop responde
+4. levanta `db` y `mailpit`
+5. espera a que `db` esté healthy
+6. aplica bootstrap SQL de roles/JWT para corregir contraseñas y permisos aunque el volumen ya existiera
+7. levanta `auth` y `rest`
+8. espera a que ambos estén healthy
+9. levanta `gateway`
+
+Esto evita varios fallos típicos en Windows:
+
+- variables vacías o archivo incorrecto
+- dependencias arrancando en orden malo
+- volúmenes inicializados con credenciales antiguas
+- orphans de ejecuciones previas
+
+## Cómo comprobar que todo está healthy
+
+### Estado de contenedores
+
+```bash
+docker compose ps
+```
+
+### Health del gateway
+
+- [http://127.0.0.1:55421/health](http://127.0.0.1:55421/health)
+
+### Ver logs
+
+```bash
+npm run local:logs
+```
+
+## Reset y recuperación
+
+### Si el stack quedó roto
+
+Usa:
+
+```bash
+npm run local:reset
+```
+
+`local:reset` hace:
+
+- `docker compose down -v --remove-orphans`
+- recrea `db`, `mailpit`, `auth`, `rest` y `gateway`
+
+Después ejecuta:
+
+```bash
+npm run local:migrate
+npm run local:seed
+```
+
+### Si solo quieres apagarlo
+
+```bash
+npm run local:down
+```
+
+## Auth local
+
+La auth real sigue funcionando con Supabase Auth local:
+
+- registro
+- login
+- logout
+- sesión SSR persistente
+- bootstrap automático de `profiles`
+- recuperación de acceso
+
+Los correos de recuperación salen a Mailpit:
+
+- [http://127.0.0.1:8025](http://127.0.0.1:8025)
+
+Por defecto:
+
+- `AUTH_AUTO_CONFIRM=true`
+
+## Migraciones y seed
+
+Migraciones en orden:
+
+- [supabase/migrations/20260417130000_init.sql](/C:/Users/victor/Desktop/Proyecto%20DAW/SquadLink/supabase/migrations/20260417130000_init.sql:1)
+- [supabase/migrations/20260417143000_backend_real.sql](/C:/Users/victor/Desktop/Proyecto%20DAW/SquadLink/supabase/migrations/20260417143000_backend_real.sql:1)
+- [supabase/migrations/20260420110000_auth_profile_bootstrap_hardening.sql](/C:/Users/victor/Desktop/Proyecto%20DAW/SquadLink/supabase/migrations/20260420110000_auth_profile_bootstrap_hardening.sql:1)
+
+Seed:
+
+- [supabase/seed/seed.sql](/C:/Users/victor/Desktop/Proyecto%20DAW/SquadLink/supabase/seed/seed.sql:1)
+
+## Infraestructura local añadida
+
+- [docker-compose.yml](/C:/Users/victor/Desktop/Proyecto%20DAW/SquadLink/docker-compose.yml:1)
+- [docker/nginx/supabase.conf](/C:/Users/victor/Desktop/Proyecto%20DAW/SquadLink/docker/nginx/supabase.conf:1)
+- [docker/db/bootstrap/00-local-bootstrap.sql](/C:/Users/victor/Desktop/Proyecto%20DAW/SquadLink/docker/db/bootstrap/00-local-bootstrap.sql:1)
+- [docker/db/init/00-local-bootstrap.sh](/C:/Users/victor/Desktop/Proyecto%20DAW/SquadLink/docker/db/init/00-local-bootstrap.sh:1)
+- [scripts/local-stack.mjs](/C:/Users/victor/Desktop/Proyecto%20DAW/SquadLink/scripts/local-stack.mjs:1)
+
+## Scripts locales
+
+- `npm run local:up`
+- `npm run local:down`
+- `npm run local:migrate`
+- `npm run local:seed`
+- `npm run local:reset`
+- `npm run local:logs`
+
+## Verificación del repo
 
 ```bash
 npm run lint
@@ -57,183 +222,3 @@ npm run typecheck
 npm run test
 npm run build
 ```
-
-## Configurar Supabase
-
-1. Crea un proyecto en Supabase.
-2. Copia `.env.example` a `.env.local`.
-3. Rellena URL, anon key y service role key.
-4. Cambia `NEXT_PUBLIC_APP_MODE=supabase`.
-5. Aplica las migraciones:
-
-```sql
--- Ejecuta en orden:
-supabase/migrations/20260417130000_init.sql
-supabase/migrations/20260417143000_backend_real.sql
-```
-
-6. Carga los seeds:
-
-```sql
-supabase/seed/seed.sql
-```
-
-## Qué añade la migración backend real
-
-- trigger de bootstrap de `profiles` al registrarse un usuario
-- helper `ensure_profile_for_user`
-- helper `is_admin`
-- helper `is_clan_manager`
-- soporte RAWG cache en `games`
-- `requirements` en `clans`
-- `read_at` y `updated_at` en `notifications`
-- índice parcial para evitar múltiples solicitudes pendientes por clan/usuario
-- índice parcial para invitaciones pendientes
-- endurecimiento de RLS para clanes, eventos, reportes y notificaciones
-
-## Modo demo vs modo real
-
-### Demo
-
-- no requiere Supabase
-- permite enseñar flujos y pantallas
-- las mutaciones no persisten fuera del runtime
-
-### Supabase
-
-- login y registro reales
-- bootstrap de perfil real
-- CRUD real de perfil, clanes, solicitudes, eventos, LFG, reportes y notificaciones
-- permisos y RLS alineados
-
-## Endpoints implementados
-
-### Perfil
-
-- `GET /api/profile/me`
-- `PATCH /api/profile/me`
-
-### Clanes
-
-- `GET /api/clans`
-- `GET /api/clans/[slug]`
-- `POST /api/clans`
-- `PATCH /api/clans/[slug]`
-
-### Solicitudes
-
-- `GET /api/clans/[slug]/join-requests`
-- `POST /api/clans/[slug]/join-requests`
-- `PATCH /api/clan-requests/[id]`
-
-### Eventos
-
-- `GET /api/events`
-- `GET /api/events/[id]`
-- `POST /api/clans/[slug]/events`
-- `PATCH /api/events/[id]`
-- `POST /api/events/[id]/attendance`
-
-### LFG
-
-- `GET /api/lfg`
-- `POST /api/lfg`
-- `PATCH /api/lfg/[id]`
-
-### Recomendaciones
-
-- `GET /api/recommendations/clans`
-
-### Reportes y admin
-
-- `POST /api/reports`
-- `GET /api/admin/reports`
-- `PATCH /api/admin/reports/[id]`
-
-### Notificaciones
-
-- `GET /api/notifications`
-- `PATCH /api/notifications/[id]/read`
-
-### Catálogo externo desacoplado
-
-- `GET /api/catalog/games/search?q=`
-- `POST /api/catalog/games/sync`
-- `GET /api/offers/game/[slug]`
-
-## Servicios principales
-
-La capa de datos real queda centralizada en `services/`:
-
-- `profile-service.ts`
-- `clan-service.ts`
-- `event-service.ts`
-- `lfg-service.ts`
-- `report-service.ts`
-- `notification-service.ts`
-- `recommendation-service.ts`
-- `catalog-service.ts`
-
-`services/squadlink-service.ts` se mantiene como barrel para no romper imports existentes del frontend.
-
-## Flujos operativos
-
-- registro
-- login
-- bootstrap de perfil
-- edición de perfil
-- creación y edición de clan
-- solicitud de ingreso
-- aprobación y rechazo de solicitudes
-- creación de evento
-- respuesta de asistencia
-- publicación de LFG
-- creación de reporte
-- moderación básica de reportes
-- recomendaciones desde datos reales o demo
-
-## Tests
-
-Se cubren:
-
-- validaciones Zod
-- lógica de compatibilidad
-- render smoke de tarjeta de compatibilidad
-- creación de clan
-- creación y resolución de solicitud
-- creación de evento
-- respuesta de asistencia
-- creación de LFG
-- orden de recomendaciones
-
-## Estructura
-
-```text
-app/                Rutas, actions y route handlers
-components/         UI y layout
-features/           Pantallas y composición visual
-services/           Capa de datos y lógica de negocio
-lib/                Utilidades, auth y Supabase
-validations/        Schemas Zod
-data/               Fallback demo
-supabase/           Migraciones y seed
-tests/              Unit e integration tests
-docs/               Arquitectura, base de datos y roadmap
-```
-
-## Decisiones técnicas
-
-- Se mantiene el frontend existente y se sustituye la persistencia mock por servicios reales.
-- El modo demo no se elimina: queda como fallback explícito.
-- La lógica de compatibilidad sigue siendo transparente y reutilizable.
-- Las operaciones sensibles usan server actions y/o route handlers sobre la misma capa de servicios.
-- El barrel `services/squadlink-service.ts` evita romper imports previos del proyecto.
-
-## Siguiente fase razonable
-
-- formularios más ricos con selects conectados a catálogos
-- edición y cierre de LFG con UX dedicada
-- aceptación de invitaciones
-- reviews persistentes en UI
-- notificaciones in-app más completas
-- tests de integración contra Supabase local real
