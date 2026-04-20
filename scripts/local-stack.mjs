@@ -8,17 +8,19 @@ const exampleEnvPath = path.join(rootDir, ".env.example");
 const dockerEnvPath = path.join(rootDir, ".env");
 const nextEnvPath = path.join(rootDir, ".env.local");
 const bootstrapSqlPath = path.join(rootDir, "docker", "db", "bootstrap", "00-local-bootstrap.sql");
+const migrationsDir = path.join(rootDir, "database", "migrations");
+const seedPath = path.join(rootDir, "database", "seed", "seed.sql");
 
 const requiredKeys = [
   "NEXT_PUBLIC_APP_URL",
   "NEXT_PUBLIC_APP_MODE",
-  "NEXT_PUBLIC_SUPABASE_URL",
-  "NEXT_PUBLIC_SUPABASE_ANON_KEY",
-  "SUPABASE_SERVICE_ROLE_KEY",
+  "NEXT_PUBLIC_BACKEND_URL",
+  "NEXT_PUBLIC_BACKEND_ANON_KEY",
+  "BACKEND_SERVICE_ROLE_KEY",
   "POSTGRES_PASSWORD",
   "JWT_SECRET",
   "LOCAL_DB_PORT",
-  "LOCAL_SUPABASE_PORT",
+  "LOCAL_BACKEND_PORT",
   "MAILPIT_SMTP_PORT",
   "MAILPIT_UI_PORT",
 ];
@@ -26,9 +28,9 @@ const requiredKeys = [
 const syncedNextKeys = [
   "NEXT_PUBLIC_APP_URL",
   "NEXT_PUBLIC_APP_MODE",
-  "NEXT_PUBLIC_SUPABASE_URL",
-  "NEXT_PUBLIC_SUPABASE_ANON_KEY",
-  "SUPABASE_SERVICE_ROLE_KEY",
+  "NEXT_PUBLIC_BACKEND_URL",
+  "NEXT_PUBLIC_BACKEND_ANON_KEY",
+  "BACKEND_SERVICE_ROLE_KEY",
   "RAWG_API_KEY",
   "CHEAPSHARK_BASE_URL",
 ];
@@ -64,10 +66,7 @@ function parseEnvFile(filePath) {
     const key = trimmed.slice(0, separatorIndex).trim();
     let value = trimmed.slice(separatorIndex + 1).trim();
 
-    if (
-      (value.startsWith('"') && value.endsWith('"')) ||
-      (value.startsWith("'") && value.endsWith("'"))
-    ) {
+    if ((value.startsWith("\"") && value.endsWith("\"")) || (value.startsWith("'") && value.endsWith("'"))) {
       value = value.slice(1, -1);
     }
 
@@ -83,33 +82,57 @@ function stringifyEnv(envEntries) {
     .join("\n")}\n`;
 }
 
+function normalizeEnv(envEntries) {
+  const normalized = { ...envEntries };
+
+  normalized.NEXT_PUBLIC_BACKEND_URL ??= normalized.NEXT_PUBLIC_SUPABASE_URL ?? "";
+  normalized.NEXT_PUBLIC_BACKEND_ANON_KEY ??= normalized.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
+  normalized.BACKEND_SERVICE_ROLE_KEY ??= normalized.SUPABASE_SERVICE_ROLE_KEY ?? "";
+  normalized.LOCAL_BACKEND_PORT ??= normalized.LOCAL_SUPABASE_PORT ?? "";
+  normalized.NEXT_PUBLIC_APP_MODE ??= "local";
+
+  normalized.NEXT_PUBLIC_SUPABASE_URL ??= normalized.NEXT_PUBLIC_BACKEND_URL;
+  normalized.NEXT_PUBLIC_SUPABASE_ANON_KEY ??= normalized.NEXT_PUBLIC_BACKEND_ANON_KEY;
+  normalized.SUPABASE_SERVICE_ROLE_KEY ??= normalized.BACKEND_SERVICE_ROLE_KEY;
+  normalized.LOCAL_SUPABASE_PORT ??= normalized.LOCAL_BACKEND_PORT;
+
+  return normalized;
+}
+
 function ensureEnvFiles() {
   if (!existsSync(exampleEnvPath)) {
-    fail("Falta .env.example en la raíz del proyecto.");
+    fail("Falta .env.example en la raiz del proyecto.");
   }
 
   if (!existsSync(dockerEnvPath)) {
     copyFileSync(exampleEnvPath, dockerEnvPath);
-    console.log("Se ha creado .env a partir de .env.example. Revisa los valores si necesitas cambiarlos.");
+    console.log("Se ha creado .env a partir de .env.example. Revisa los valores antes de continuar.");
   }
 
-  const envFromDockerFile = parseEnvFile(dockerEnvPath);
+  const parsedDockerEnv = parseEnvFile(dockerEnvPath);
+  const envFromDockerFile = normalizeEnv(parsedDockerEnv);
+  const normalizedDockerEnvText = stringifyEnv(envFromDockerFile);
+  const originalDockerEnvText = existsSync(dockerEnvPath) ? readFileSync(dockerEnvPath, "utf8") : "";
+
+  if (normalizedDockerEnvText !== originalDockerEnvText) {
+    writeFileSync(dockerEnvPath, normalizedDockerEnvText, "utf8");
+  }
 
   for (const key of requiredKeys) {
     if (!envFromDockerFile[key]?.trim()) {
-      fail(`La variable ${key} está vacía o no existe en .env.`);
+      fail(`La variable ${key} esta vacia o no existe en .env.`);
     }
   }
 
-  if (envFromDockerFile.NEXT_PUBLIC_APP_MODE !== "supabase") {
-    fail("NEXT_PUBLIC_APP_MODE debe ser 'supabase' para el stack local con Docker.");
+  if (!["local", "backend", "supabase"].includes(envFromDockerFile.NEXT_PUBLIC_APP_MODE)) {
+    fail("NEXT_PUBLIC_APP_MODE debe ser 'local', 'backend' o 'supabase'.");
   }
 
   if (envFromDockerFile.JWT_SECRET.length < 32) {
     fail("JWT_SECRET debe tener al menos 32 caracteres.");
   }
 
-  let nextEnv = existsSync(nextEnvPath) ? parseEnvFile(nextEnvPath) : {};
+  const nextEnv = existsSync(nextEnvPath) ? normalizeEnv(parseEnvFile(nextEnvPath)) : {};
   let nextEnvChanged = false;
 
   for (const key of syncedNextKeys) {
@@ -121,7 +144,7 @@ function ensureEnvFiles() {
 
   if (!existsSync(nextEnvPath) || nextEnvChanged) {
     writeFileSync(nextEnvPath, stringifyEnv(nextEnv), "utf8");
-    console.log("Se ha sincronizado .env.local con las variables compartidas del stack local.");
+    console.log("Se ha sincronizado .env.local con las variables del backend local.");
   }
 
   return {
@@ -153,22 +176,29 @@ function run(command, args, options = {}) {
         return;
       }
 
-      reject(new Error(`${command} ${args.join(" ")} falló con código ${code}`));
+      reject(new Error(`${command} ${args.join(" ")} fallo con codigo ${code}`));
     });
   });
 }
 
-function runCapture(command, args) {
+function runCapture(command, args, options = {}) {
   return new Promise((resolve, reject) => {
     const child = spawn(command, args, {
       cwd: rootDir,
       env,
-      stdio: ["ignore", "pipe", "pipe"],
+      stdio: ["pipe", "pipe", "pipe"],
       shell: false,
     });
 
     let stdout = "";
     let stderr = "";
+
+    if (options.input) {
+      child.stdin.write(options.input);
+      child.stdin.end();
+    } else {
+      child.stdin.end();
+    }
 
     child.stdout.on("data", (chunk) => {
       stdout += chunk.toString();
@@ -185,7 +215,7 @@ function runCapture(command, args) {
         return;
       }
 
-      reject(new Error(stderr.trim() || stdout.trim() || `${command} falló con código ${code}`));
+      reject(new Error(stderr.trim() || stdout.trim() || `${command} fallo con codigo ${code}`));
     });
   });
 }
@@ -197,9 +227,7 @@ function composeArgs(...args) {
 function isPortAvailable(port) {
   return new Promise((resolve) => {
     const server = net.createServer();
-    server.once("error", () => {
-      resolve(false);
-    });
+    server.once("error", () => resolve(false));
     server.once("listening", () => {
       server.close(() => resolve(true));
     });
@@ -210,7 +238,7 @@ function isPortAvailable(port) {
 async function ensureRequiredPortsAvailable() {
   const portsToCheck = [
     { key: "LOCAL_DB_PORT", label: "PostgreSQL", serviceName: "db" },
-    { key: "LOCAL_SUPABASE_PORT", label: "Supabase gateway", serviceName: "gateway" },
+    { key: "LOCAL_BACKEND_PORT", label: "Backend gateway", serviceName: "gateway" },
     { key: "MAILPIT_SMTP_PORT", label: "Mailpit SMTP", serviceName: "mailpit" },
     { key: "MAILPIT_UI_PORT", label: "Mailpit UI", serviceName: "mailpit" },
   ];
@@ -220,7 +248,7 @@ async function ensureRequiredPortsAvailable() {
     const port = Number(rawPort);
 
     if (!Number.isInteger(port) || port <= 0 || port > 65535) {
-      fail(`La variable ${key} debe ser un puerto válido. Valor actual: ${rawPort}`);
+      fail(`La variable ${key} debe ser un puerto valido. Valor actual: ${rawPort}`);
     }
 
     try {
@@ -235,12 +263,12 @@ async function ensureRequiredPortsAvailable() {
         continue;
       }
     } catch {
-      // no-op: if the container does not exist we validate the host port
+      // Si no existe el contenedor, comprobamos el puerto del host.
     }
 
     const available = await isPortAvailable(port);
     if (!available) {
-      fail(`El puerto ${port} (${label}) ya está en uso o bloqueado. Cambia ${key} en .env y, si aplica, ajusta NEXT_PUBLIC_SUPABASE_URL.`);
+      fail(`El puerto ${port} (${label}) ya esta en uso. Cambia ${key} en .env y, si aplica, ajusta NEXT_PUBLIC_BACKEND_URL.`);
     }
   }
 }
@@ -249,14 +277,12 @@ async function ensureDockerReady() {
   try {
     await run("docker", ["info"]);
   } catch {
-    fail("Docker no está disponible. Abre Docker Desktop, espera a que termine de arrancar y vuelve a ejecutar el comando.");
+    fail("Docker no esta disponible. Abre Docker Desktop, espera a que arranque y vuelve a ejecutar el comando.");
   }
 }
 
 async function waitForDb() {
-  const maxAttempts = 40;
-
-  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+  for (let attempt = 1; attempt <= 40; attempt += 1) {
     try {
       await run("docker", composeArgs("exec", "-T", "db", "pg_isready", "-U", "postgres", "-h", "localhost"));
       return;
@@ -265,14 +291,13 @@ async function waitForDb() {
     }
   }
 
-  fail("La base de datos local no respondió a tiempo. Revisa `npm run local:logs`.");
+  fail("La base de datos local no respondio a tiempo. Revisa `npm run local:logs`.");
 }
 
 async function waitForServiceHealthy(serviceName) {
   const containerName = serviceContainers[serviceName];
-  const maxAttempts = 40;
 
-  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+  for (let attempt = 1; attempt <= 40; attempt += 1) {
     try {
       const status = await runCapture("docker", [
         "inspect",
@@ -287,10 +312,10 @@ async function waitForServiceHealthy(serviceName) {
 
       if (status === "unhealthy" || status === "exited") {
         await run("docker", composeArgs("logs", "--tail", "120", serviceName));
-        fail(`El servicio ${serviceName} quedó en estado ${status}.`);
+        fail(`El servicio ${serviceName} quedo en estado ${status}.`);
       }
     } catch {
-      // wait until the container exists
+      // Esperamos a que exista el contenedor.
     }
 
     await new Promise((resolve) => setTimeout(resolve, 2000));
@@ -300,43 +325,95 @@ async function waitForServiceHealthy(serviceName) {
   fail(`Timeout esperando a que ${serviceName} estuviera healthy.`);
 }
 
-async function applySqlFile(filePath, variables = {}, databaseUser = "postgres") {
-  const sql = readFileSync(filePath, "utf8");
-  const args = composeArgs(
-    "exec",
-    "-T",
-    "db",
-    "psql",
-    "-v",
-    "ON_ERROR_STOP=1",
-    "-U",
-    databaseUser,
-    "-d",
-    "postgres",
-  );
+async function applySqlText(sql, variables = {}, databaseUser = "postgres") {
+  const args = composeArgs("exec", "-T", "db", "psql", "-v", "ON_ERROR_STOP=1", "-U", databaseUser, "-d", "postgres");
 
   for (const [key, value] of Object.entries(variables)) {
     args.push("-v", `${key}=${value}`);
   }
 
-  console.log(`Aplicando ${path.relative(rootDir, filePath)}...`);
   await run("docker", args, { input: sql });
 }
 
+async function applySqlFile(filePath, variables = {}, databaseUser = "postgres") {
+  const sql = readFileSync(filePath, "utf8");
+  console.log(`Aplicando ${path.relative(rootDir, filePath)}...`);
+  await applySqlText(sql, variables, databaseUser);
+}
+
 async function bootstrapDbRuntime() {
-  await applySqlFile(bootstrapSqlPath, {
-    postgres_password: env.POSTGRES_PASSWORD,
-    jwt_secret: env.JWT_SECRET,
-    jwt_exp: env.JWT_EXPIRY ?? "3600",
-  }, "supabase_admin");
+  await applySqlFile(
+    bootstrapSqlPath,
+    {
+      postgres_password: env.POSTGRES_PASSWORD,
+      jwt_secret: env.JWT_SECRET,
+      jwt_exp: env.JWT_EXPIRY ?? "3600",
+    },
+    "supabase_admin",
+  );
 }
 
 function getMigrationFiles() {
-  const migrationsDir = path.join(rootDir, "supabase", "migrations");
   return readdirSync(migrationsDir)
     .filter((file) => file.endsWith(".sql"))
     .sort()
     .map((file) => path.join(migrationsDir, file));
+}
+
+async function ensureMigrationTable() {
+  await applySqlText(`
+    create table if not exists public.schema_migrations (
+      name text primary key,
+      applied_at timestamptz not null default timezone('utc', now())
+    );
+  `);
+}
+
+async function getAppliedMigrationNames() {
+  const stdout = await runCapture("docker", [
+    ...composeArgs(
+      "exec",
+      "-T",
+      "db",
+      "psql",
+      "-t",
+      "-A",
+      "-U",
+      "postgres",
+      "-d",
+      "postgres",
+      "-c",
+      "select name from public.schema_migrations order by name;",
+    ),
+  ]);
+
+  return new Set(stdout.split(/\r?\n/).map((line) => line.trim()).filter(Boolean));
+}
+
+async function schemaAlreadyPresent() {
+  const stdout = await runCapture("docker", [
+    ...composeArgs(
+      "exec",
+      "-T",
+      "db",
+      "psql",
+      "-t",
+      "-A",
+      "-U",
+      "postgres",
+      "-d",
+      "postgres",
+      "-c",
+      "select case when to_regclass('public.profiles') is null then '0' else '1' end;",
+    ),
+  ]);
+
+  return stdout.trim() === "1";
+}
+
+async function markMigrationApplied(fileName) {
+  const escaped = fileName.replaceAll("'", "''");
+  await applySqlText(`insert into public.schema_migrations(name) values ('${escaped}') on conflict do nothing;`);
 }
 
 async function up() {
@@ -374,10 +451,25 @@ async function migrate() {
   env = ensureEnvFiles();
   await ensureDockerReady();
   await waitForDb();
-  await waitForServiceHealthy("auth");
+  await ensureMigrationTable();
+
+  let applied = await getAppliedMigrationNames();
+  if (applied.size === 0 && (await schemaAlreadyPresent())) {
+    for (const filePath of getMigrationFiles()) {
+      await markMigrationApplied(path.basename(filePath));
+    }
+
+    applied = await getAppliedMigrationNames();
+  }
 
   for (const filePath of getMigrationFiles()) {
+    const fileName = path.basename(filePath);
+    if (applied.has(fileName)) {
+      continue;
+    }
+
     await applySqlFile(filePath);
+    await markMigrationApplied(fileName);
   }
 }
 
@@ -385,7 +477,7 @@ async function seed() {
   env = ensureEnvFiles();
   await ensureDockerReady();
   await waitForDb();
-  await applySqlFile(path.join(rootDir, "supabase", "seed", "seed.sql"));
+  await applySqlFile(seedPath);
 }
 
 async function reset() {

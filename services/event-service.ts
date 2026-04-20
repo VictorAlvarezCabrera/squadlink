@@ -1,6 +1,6 @@
 import { eventAttendees as demoEventAttendees, events as demoEvents, games as demoGames, clans as demoClans, profiles as demoProfiles } from "@/data/demo";
 import { AppError } from "@/lib/app-error";
-import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { createServerBackendClient } from "@/lib/backend/server";
 import type { AttendanceStatus, EventVisibility } from "@/types/domain";
 
 import { getClanBySlug, listClanMembers, listClans } from "@/services/clan-service";
@@ -53,7 +53,7 @@ export async function listEvents() {
     }));
   }
 
-  const supabase = await createServerSupabaseClient();
+  const supabase = await createServerBackendClient();
   const [events, clans] = await Promise.all([
     supabase!.from("events").select("*").order("starts_at", { ascending: true }).returns<EventRow[]>(),
     listClans(),
@@ -99,7 +99,7 @@ export async function getEventById(id: string) {
     return null;
   }
 
-  const supabase = await createServerSupabaseClient();
+  const supabase = await createServerBackendClient();
   const { data } = await supabase!.from("event_attendees").select("*").eq("event_id", id).returns<EventAttendeeRow[]>();
 
   return {

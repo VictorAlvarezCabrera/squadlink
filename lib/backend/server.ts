@@ -1,16 +1,16 @@
 import { cookies } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
 
-import { env, isSupabaseEnabled } from "@/lib/env";
+import { env, isBackendEnabled } from "@/lib/env";
 
-export async function createServerSupabaseClient() {
-  if (!isSupabaseEnabled) {
+export async function createServerBackendClient() {
+  if (!isBackendEnabled) {
     return null;
   }
 
   const cookieStore = await cookies();
 
-  return createServerClient(env.supabaseUrl, env.supabaseAnonKey, {
+  return createServerClient(env.backendUrl, env.backendAnonKey, {
     cookies: {
       getAll() {
         return cookieStore.getAll();

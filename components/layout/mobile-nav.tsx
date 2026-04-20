@@ -26,37 +26,37 @@ export function MobileNav({
   isAuthenticated: boolean;
 }) {
   return (
-    <div className="md:hidden">
+    <div className="lg:hidden">
       <Sheet>
         <SheetTrigger
           render={
             <Button
               variant="outline"
               size="icon"
-              aria-label="Abrir menu de navegacion"
-              className="border-red-500/40 bg-red-500/10 text-white hover:bg-red-500/20"
+              aria-label="Abrir menu"
+              className="border border-slate-300/25 bg-slate-900/70 text-slate-50 hover:border-cyan-300/60 hover:bg-cyan-300/10 font-medium card-hover"
             />
           }
         >
-          <Menu />
+          <Menu className="size-4 sm:size-5" />
         </SheetTrigger>
 
         <SheetContent
           side="right"
-          className="border-l border-red-500/30 bg-gradient-to-b from-zinc-950 via-black to-zinc-950 p-0"
+          className="w-full border-l border-slate-300/20 bg-slate-950/95 p-0 backdrop-blur-md sm:max-w-xs"
         >
-          <SheetHeader className="border-b border-white/10 px-5 py-4">
-            <SheetTitle className="text-base uppercase tracking-[0.2em] text-red-200">SquadLink</SheetTitle>
+          <SheetHeader className="border-b border-slate-300/20 px-4 py-3 sm:px-5 sm:py-4">
+            <SheetTitle className="text-sm font-semibold text-cyan-100">Navegación</SheetTitle>
           </SheetHeader>
 
-          <nav className="space-y-2 px-4 py-5">
+          <nav aria-label="Navegacion movil" className="space-y-1 sm:space-y-2 px-3 sm:px-4 py-4 sm:py-5">
             {navigation.map((item) => (
               <SheetClose
                 key={item.href}
                 render={
                   <Link
                     href={item.href}
-                    className="block rounded-xl border border-transparent bg-white/5 px-4 py-3 text-sm text-zinc-200 transition hover:border-red-500/35 hover:bg-red-500/10 hover:text-white"
+                    className="block border border-slate-300/20 bg-slate-900/60 px-3 py-2 text-sm font-medium text-slate-100 transition hover:border-cyan-300/50 hover:bg-cyan-300/10 hover:text-cyan-100 card-hover sm:px-4 sm:py-3"
                   />
                 }
               >
@@ -65,24 +65,24 @@ export function MobileNav({
             ))}
           </nav>
 
-          <div className="mt-auto grid gap-2 border-t border-white/10 px-4 py-5">
+          <div className="mt-auto grid gap-2 border-t border-slate-300/20 px-3 py-4 sm:px-4 sm:py-5">
             {isAuthenticated ? (
               <>
                 <SheetClose
                   render={
                     <Link
-                      href="/dashboard"
-                      className="rounded-xl border border-red-500/35 bg-red-500/10 px-4 py-3 text-center text-sm font-medium text-white transition hover:bg-red-500/20"
+                      href="/me"
+                      className="border border-cyan-300/50 bg-cyan-300/15 px-3 py-2 text-center text-sm font-medium text-cyan-100 transition hover:bg-cyan-300/25 card-hover sm:px-4 sm:py-3"
                     />
                   }
                 >
-                  Dashboard
+                  Mi perfil
                 </SheetClose>
                 <SheetClose
                   render={
                     <Link
-                      href="/ajustes"
-                      className="rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-center text-sm text-zinc-200 transition hover:border-red-500/30 hover:bg-red-500/10"
+                      href="/settings/profile"
+                      className="border border-slate-300/20 bg-slate-900/60 px-3 py-2 text-center text-sm font-medium text-slate-100 transition hover:border-cyan-300/50 hover:bg-cyan-300/10 card-hover sm:px-4 sm:py-3"
                     />
                   }
                 >
@@ -95,7 +95,7 @@ export function MobileNav({
                   render={
                     <Link
                       href="/login"
-                      className="rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-center text-sm text-zinc-200 transition hover:border-red-500/30 hover:bg-red-500/10"
+                      className="border border-slate-300/20 bg-slate-900/60 px-3 py-2 text-center text-sm font-medium text-slate-100 transition hover:border-cyan-300/50 hover:bg-cyan-300/10 card-hover sm:px-4 sm:py-3"
                     />
                   }
                 >
@@ -105,7 +105,7 @@ export function MobileNav({
                   render={
                     <Link
                       href="/registro"
-                      className="rounded-xl border border-red-500/35 bg-red-500 px-4 py-3 text-center text-sm font-medium text-white transition hover:bg-red-400"
+                      className="border border-cyan-300/50 bg-cyan-300/15 px-3 py-2 text-center text-sm font-medium text-cyan-100 transition hover:bg-cyan-300/25 card-hover sm:px-4 sm:py-3"
                     />
                   }
                 >

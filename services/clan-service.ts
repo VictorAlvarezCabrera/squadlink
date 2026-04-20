@@ -24,7 +24,7 @@ import {
   isDemoMode,
   slugify,
 } from "@/services/_shared";
-import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { createServerBackendClient } from "@/lib/backend/server";
 
 export interface ClanInput {
   name: string;
@@ -75,7 +75,7 @@ export async function listClans() {
     return demoClans;
   }
 
-  const supabase = await createServerSupabaseClient();
+  const supabase = await createServerBackendClient();
   const [catalog, { data: clanRows }, { data: clanPlatforms }, { data: clanLanguages }, { data: clanRoles }, { data: clanMembers }] =
     await Promise.all([
       getCatalogRows(),

@@ -3,7 +3,7 @@ import type { Game, Platform } from "@/types/domain";
 
 import {
   assertAdmin,
-  createAdminSupabaseClient,
+  createAdminBackendClient,
   demoCatalog,
   getCatalogRows,
   isDemoMode,
@@ -33,12 +33,17 @@ export async function searchGames(query: string) {
   return catalog.games.filter((game) => game.name.toLowerCase().includes(term) || game.slug.includes(term));
 }
 
+export async function getGameBySlug(slug: string) {
+  const catalog = await getCatalog();
+  return catalog.games.find((game) => game.slug === slug) ?? null;
+}
+
 export async function syncGameCatalog(query: string) {
   await assertAdmin();
 
-  const admin = createAdminSupabaseClient();
+  const admin = createAdminBackendClient();
   if (!admin) {
-    throw new AppError("Service role de Supabase no configurada.", 500);
+    throw new AppError("Service role del backend no configurada.", 500);
   }
 
   const apiKey = process.env.RAWG_API_KEY;

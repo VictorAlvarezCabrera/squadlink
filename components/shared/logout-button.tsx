@@ -14,12 +14,12 @@ export function LogoutButton() {
   return (
     <Button
       variant="ghost"
-      className="text-slate-200 hover:bg-white/10 hover:text-white"
+      className="w-full justify-start border border-slate-300/20 bg-slate-900/50 text-slate-100 hover:border-cyan-300/50 hover:bg-cyan-300/10 hover:text-cyan-100 text-sm font-medium"
       onClick={() => startTransition(() => void logoutAction())}
       disabled={pending}
     >
-      <LogOut />
-      Salir
+      <LogOut className="size-3 sm:size-4" />
+      {pending ? "Cerrando sesion..." : "Cerrar sesion"}
     </Button>
   );
 }

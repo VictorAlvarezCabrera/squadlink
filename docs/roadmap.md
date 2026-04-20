@@ -1,12 +1,7 @@
 # Roadmap
 
-## Próximas mejoras razonables
-
-- Formularios conectados a persistencia real para clanes, eventos y LFG
-- Panel avanzado de administración con acciones de moderación
-- Filtros de exploración conectados a búsqueda server-side
-- Métricas de actividad y salud de clanes
-- Notificaciones in-app persistentes
-- Recomendaciones por juego específico y por squad temporal
-- Tests de integración con Supabase local
-- Dashboard de liderazgo con analítica de asistencia
+- Tests de integracion contra el backend local real
+- Invitaciones de clan completas en UI
+- Moderacion admin mas detallada
+- Mejor catalogo de juegos cacheado
+- Cierre y archivado avanzado de LFG

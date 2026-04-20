@@ -6,8 +6,8 @@ import { redirect } from "next/navigation";
 import { findDemoProfileForCredentials } from "@/lib/auth/session";
 import { demoAuthCookie } from "@/lib/constants";
 import { env, isDemoMode } from "@/lib/env";
-import { createServerSupabaseClient } from "@/lib/supabase/server";
-import { bootstrapProfile } from "@/services/profile-service";
+import { createServerBackendClient } from "@/lib/backend/server";
+import { bootstrapProfile, isNickAvailable } from "@/services/profile-service";
 import { loginSchema, recoverAccessSchema, registerSchema } from "@/validations/auth";
 
 export interface FormState {
@@ -36,9 +36,9 @@ export async function loginAction(_previousState: FormState, formData: FormData)
     redirect("/dashboard");
   }
 
-  const supabase = await createServerSupabaseClient();
+  const supabase = await createServerBackendClient();
   if (!supabase) {
-    return { success: false, message: "Supabase no está configurado." };
+    return { success: false, message: "Supabase no esta configurado." };
   }
 
   const { error } = await supabase.auth.signInWithPassword(parsed.data);
@@ -78,9 +78,14 @@ export async function registerAction(_previousState: FormState, formData: FormDa
     redirect("/dashboard");
   }
 
-  const supabase = await createServerSupabaseClient();
+  const supabase = await createServerBackendClient();
   if (!supabase) {
-    return { success: false, message: "Supabase no está configurado." };
+    return { success: false, message: "Supabase no esta configurado." };
+  }
+
+  const nickAvailable = await isNickAvailable(parsed.data.nick);
+  if (!nickAvailable) {
+    return { success: false, message: "Ese nick ya esta en uso." };
   }
 
   const { data, error } = await supabase.auth.signUp({
@@ -125,12 +130,12 @@ export async function recoverAccessAction(_previousState: FormState, formData: F
   }
 
   if (isDemoMode) {
-    return { success: true, message: "Modo demo: se simula el envío del correo de recuperación." };
+    return { success: true, message: "Modo demo: se simula el envio del correo de recuperacion." };
   }
 
-  const supabase = await createServerSupabaseClient();
+  const supabase = await createServerBackendClient();
   if (!supabase) {
-    return { success: false, message: "Supabase no está configurado." };
+    return { success: false, message: "Supabase no esta configurado." };
   }
 
   const { error } = await supabase.auth.resetPasswordForEmail(parsed.data.email, {
@@ -150,7 +155,7 @@ export async function logoutAction() {
     redirect("/");
   }
 
-  const supabase = await createServerSupabaseClient();
+  const supabase = await createServerBackendClient();
   await supabase?.auth.signOut();
   redirect("/");
 }

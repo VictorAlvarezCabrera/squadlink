@@ -8,16 +8,16 @@ export default async function Page() {
   return (
     <div className="space-y-8">
       <div>
-        <p className="text-sm uppercase tracking-[0.3em] text-amber-300">Ajustes</p>
-        <h1 className="mt-2 text-4xl font-semibold text-white">Configuración de {viewer.profile.nick}</h1>
+        <p className="text-xs sm:text-sm uppercase tracking-widest text-red-400 font-black">Centro de Control</p>
+        <h1 className="mt-2 text-3xl sm:text-4xl md:text-5xl font-black uppercase tracking-widest text-red-400">Configuración Operativa - {viewer.profile.nick}</h1>
       </div>
-      <Card className="border-white/10 bg-white/5 text-white">
-        <CardHeader>
-          <CardTitle>Preferencias y seguridad</CardTitle>
+      <Card className="border border-red-400/20 bg-red-500/5 text-red-300/80 card-hover">
+        <CardHeader className="border-b border-red-400/20">
+          <CardTitle className="text-sm sm:text-base font-black uppercase tracking-widest text-red-400">Preferencias y Seguridad</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-3 text-slate-300">
-          <p>La estructura queda preparada para notificaciones, privacidad y gestión de cuenta.</p>
-          <p>En la fase actual se documenta como módulo listo para extensión sin introducir complejidad innecesaria.</p>
+        <CardContent className="space-y-3 text-red-300/80">
+          <p className="text-xs sm:text-sm font-mono uppercase">Sistema de notificaciones, privacidad y gestión de credenciales</p>
+          <p className="text-xs sm:text-sm font-mono uppercase">Módulo de extensión: notificaciones push • Control de visibilidad • Autenticación avanzada</p>
         </CardContent>
       </Card>
     </div>

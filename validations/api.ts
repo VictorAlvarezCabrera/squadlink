@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { nickSchema } from "@/validations/shared";
+
 const availabilitySlotSchema = z.object({
   day: z.enum(["mon", "tue", "wed", "thu", "fri", "sat", "sun"]),
   from: z.string().regex(/^\d{2}:\d{2}$/),
@@ -7,7 +9,7 @@ const availabilitySlotSchema = z.object({
 });
 
 export const updateProfileApiSchema = z.object({
-  nick: z.string().min(3).max(20),
+  nick: nickSchema,
   fullName: z.string().min(3).max(60),
   bio: z.string().min(10).max(280),
   avatarUrl: z.string().url().optional().or(z.literal("")),

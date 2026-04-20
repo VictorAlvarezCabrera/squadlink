@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 
 import { adminRoutes, demoAuthCookie, protectedRoutes } from "@/lib/constants";
 import { isDemoMode } from "@/lib/env";
-import { createProxySupabaseClient } from "@/lib/supabase/proxy";
+import { createProxyBackendClient } from "@/lib/backend/proxy";
 
 function matchesRoute(pathname: string, routes: string[]) {
   return routes.some((route) => pathname === route || pathname.startsWith(`${route}/`));
@@ -30,7 +30,7 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const { supabase, response } = createProxySupabaseClient(request);
+  const { supabase, response } = createProxyBackendClient(request);
   if (!supabase) {
     return NextResponse.redirect(new URL("/login", request.url));
   }

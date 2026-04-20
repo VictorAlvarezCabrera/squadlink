@@ -6,8 +6,8 @@ import {
 } from "@/data/demo";
 import { AppError } from "@/lib/app-error";
 import { isDemoMode } from "@/lib/env";
-import { createAdminSupabaseClient } from "@/lib/supabase/admin";
-import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { createAdminBackendClient } from "@/lib/backend/admin";
+import { createServerBackendClient } from "@/lib/backend/server";
 import type { Clan, Game, LfgPost, Platform, PlatformCode, Profile } from "@/types/domain";
 
 export interface ProfileRow {
@@ -189,7 +189,7 @@ export function getDemoViewerProfile() {
 }
 
 export async function getCatalogRows() {
-  const supabase = await createServerSupabaseClient();
+  const supabase = await createServerBackendClient();
   if (!supabase) {
     return null;
   }
@@ -203,7 +203,7 @@ export async function getCatalogRows() {
 }
 
 export async function getAuthedContext() {
-  const supabase = await createServerSupabaseClient();
+  const supabase = await createServerBackendClient();
   if (!supabase) {
     return null;
   }
@@ -239,7 +239,7 @@ export async function ensureBootstrapProfile() {
 
   const authed = await ensureAuthedUser();
   const user = authed.user;
-  const admin = createAdminSupabaseClient();
+  const admin = createAdminBackendClient();
 
   if (admin) {
     await admin.rpc("ensure_profile_for_user", {
@@ -263,7 +263,7 @@ export async function ensureBootstrapProfile() {
 }
 
 export async function getProfileByRow(row: ProfileRow, email: string) {
-  const supabase = await createServerSupabaseClient();
+  const supabase = await createServerBackendClient();
   const [{ data: profileLanguages }, { data: profileGames }, { data: availability }, catalog] = await Promise.all([
     supabase!.from("profile_languages").select("*").eq("profile_id", row.id).returns<ProfileLanguageRow[]>(),
     supabase!.from("profile_games").select("*").eq("profile_id", row.id).returns<ProfileGameRow[]>(),
@@ -314,7 +314,7 @@ export async function getProfileById(profileId: string) {
     return profile;
   }
 
-  const supabase = await createServerSupabaseClient();
+  const supabase = await createServerBackendClient();
   const { data: profileRow } = await supabase!.from("profiles").select("*").eq("id", profileId).maybeSingle<ProfileRow>();
 
   if (!profileRow) {
@@ -338,10 +338,10 @@ export async function insertNotification(profileId: string, title: string, body:
     return;
   }
 
-  const supabase = await createServerSupabaseClient();
+  const supabase = await createServerBackendClient();
   await supabase!.from("notifications").insert({ profile_id: profileId, title, body });
 }
 
 export const demoCatalog = { games: demoGames, platforms: demoPlatforms };
 export const demoData = { profiles: demoProfiles };
-export { createAdminSupabaseClient, isDemoMode };
+export { createAdminBackendClient, isDemoMode };

@@ -14,54 +14,54 @@ export async function DashboardPage({ profileId }: { profileId: string }) {
   return (
     <div className="space-y-8">
       <div className="space-y-3">
-        <p className="text-sm uppercase tracking-[0.3em] text-amber-300">Dashboard</p>
-        <h1 className="text-4xl font-semibold text-white">Hola, {snapshot.profile.nick}</h1>
-        <p className="text-slate-300">Vista resumida de tu actividad en clanes, eventos y reputación.</p>
+        <p className="text-xs sm:text-sm uppercase tracking-widest text-red-400 font-black">Dashboard</p>
+        <h1 className="text-3xl sm:text-4xl md:text-5xl font-black uppercase tracking-widest text-red-400">Operaciones, {snapshot.profile.nick}</h1>
+        <p className="text-xs sm:text-sm text-red-300/80 font-mono uppercase tracking-wide">Sistema de monitoreo de clanes, eventos y fiabilidad táctica</p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
-        <MetricCard label="Clanes activos" value={String(snapshot.memberships.length)} hint="Membresías actuales dentro del MVP." />
-        <MetricCard label="Próximos eventos" value={String(snapshot.upcomingEvents.length)} hint="Eventos vinculados a tus clanes." />
-        <MetricCard label="Fiabilidad" value={`${snapshot.profile.reliabilityScore}`} hint="Puntuación usada para recomendaciones." />
+      <div className="grid gap-4 sm:gap-5 grid-cols-1 md:grid-cols-3">
+        <MetricCard label="Clanes activos" value={String(snapshot.memberships.length)} hint="Membresías operacionales actuales" />
+        <MetricCard label="Próximos eventos" value={String(snapshot.upcomingEvents.length)} hint="Misiones planificadas" />
+        <MetricCard label="Nivel táctico" value={`${snapshot.profile.reliabilityScore}`} hint="Fiabilidad en operaciones" />
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-        <Card className="border-white/10 bg-white/5 text-white">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>Próximos eventos</CardTitle>
+        <Card className="border border-red-400/20 bg-red-500/5 text-red-300/80 card-hover">
+          <CardHeader className="border-b border-red-400/20 flex flex-row items-center justify-between">
+            <CardTitle className="text-sm sm:text-base font-black uppercase tracking-widest text-red-400">Próximas Misiones</CardTitle>
             <Link href="/eventos">
-              <Button variant="outline" className="border-white/10 bg-transparent text-white">
-                Ver todos
+              <Button variant="outline" className="border border-red-400/20 bg-red-500/10 text-red-300/80 hover:bg-red-500/15 hover:border-red-400/30 text-xs font-black uppercase card-hover">
+                Ver todas
               </Button>
             </Link>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-3">
             {snapshot.upcomingEvents.map((event) => (
-              <div key={event.id} className="rounded-2xl border border-white/10 bg-slate-950/50 p-4">
-                <div className="flex items-center justify-between gap-4">
+              <div key={event.id} className="border border-red-400/20 bg-red-500/5 p-3 sm:p-4 card-hover">
+                <div className="flex items-center justify-between gap-3">
                   <div>
-                    <p className="font-medium">{event.title}</p>
-                    <p className="text-sm text-slate-300">{formatDateTime(event.startsAt)}</p>
+                    <p className="text-xs sm:text-sm font-black uppercase tracking-wider text-red-300/80">{event.title}</p>
+                    <p className="text-xs text-red-400/60 font-mono">{formatDateTime(event.startsAt)}</p>
                   </div>
-                  <Badge className="bg-amber-400/15 text-amber-100">{event.attendeeCount}/{event.capacity}</Badge>
+                  <Badge className="bg-red-500/10 text-red-300/80 border border-red-400/20 font-black text-xs uppercase">{event.attendeeCount}/{event.capacity}</Badge>
                 </div>
               </div>
             ))}
           </CardContent>
         </Card>
 
-        <Card className="border-white/10 bg-white/5 text-white">
-          <CardHeader>
-            <CardTitle>Solicitudes abiertas</CardTitle>
+        <Card className="border border-red-400/20 bg-red-500/5 text-red-300/80 card-hover">
+          <CardHeader className="border-b border-red-400/20">
+            <CardTitle className="text-sm sm:text-base font-black uppercase tracking-widest text-red-400">Solicitudes Tácticas</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-3">
             {snapshot.openRequests.length === 0 ? (
-              <p className="text-sm text-slate-300">No tienes solicitudes pendientes.</p>
+              <p className="text-xs sm:text-sm text-red-400/60 font-mono uppercase">SISTEMA SIN SOLICITUDES PENDIENTES</p>
             ) : (
               snapshot.openRequests.map((request) => (
-                <div key={request.id} className="rounded-2xl border border-white/10 bg-slate-950/50 p-4">
-                  <p className="font-medium">{request.message}</p>
-                  <p className="mt-2 text-sm text-slate-300">Estado: {request.status}</p>
+                <div key={request.id} className="border border-red-400/20 bg-red-500/5 p-3 sm:p-4 card-hover">
+                  <p className="text-xs sm:text-sm font-black uppercase tracking-wider text-red-300/80">{request.message}</p>
+                  <p className="mt-2 text-xs text-red-400/60 font-mono uppercase">Estado: {request.status}</p>
                 </div>
               ))
             )}

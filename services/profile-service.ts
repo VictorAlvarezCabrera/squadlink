@@ -1,7 +1,7 @@
 import { profiles as demoProfiles } from "@/data/demo";
 import { AppError } from "@/lib/app-error";
-import { createAdminSupabaseClient } from "@/lib/supabase/admin";
-import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { createAdminBackendClient } from "@/lib/backend/admin";
+import { createServerBackendClient } from "@/lib/backend/server";
 import type { Profile, PlatformCode } from "@/types/domain";
 
 import {
@@ -27,12 +27,28 @@ export interface ProfileUpdateInput {
   availability: Profile["availability"];
 }
 
+export async function isNickAvailable(nick: string, excludeUserId?: string) {
+  if (isDemoMode) {
+    return !demoProfiles.some((profile) => profile.nick.toLowerCase() === nick.toLowerCase() && profile.authUserId !== excludeUserId);
+  }
+
+  const supabase = await createServerBackendClient();
+  if (!supabase) {
+    return false;
+  }
+
+  const query = supabase.from("profiles").select("user_id").ilike("nick", nick).limit(1);
+  const { data } = excludeUserId ? await query.neq("user_id", excludeUserId) : await query;
+
+  return !data?.length;
+}
+
 export async function getProfileByUserId(userId: string, email = "") {
   if (isDemoMode) {
     return demoProfiles.find((profile) => profile.authUserId === userId || profile.email === email) ?? null;
   }
 
-  const supabase = await createServerSupabaseClient();
+  const supabase = await createServerBackendClient();
   if (!supabase) {
     return null;
   }
@@ -55,7 +71,7 @@ export async function bootstrapProfile(input?: {
     return ensureBootstrapProfile();
   }
 
-  const admin = createAdminSupabaseClient();
+  const admin = createAdminBackendClient();
   if (input?.userId && admin) {
     const { error } = await admin.rpc("ensure_profile_for_user", {
       target_user_id: input.userId,
@@ -115,7 +131,7 @@ export async function getProfileByNick(nick: string) {
     return demoProfiles.find((profile) => profile.nick.toLowerCase() === nick.toLowerCase()) ?? null;
   }
 
-  const supabase = await createServerSupabaseClient();
+  const supabase = await createServerBackendClient();
   const { data: profileRow } = await supabase!
     .from("profiles")
     .select("*")
@@ -123,6 +139,25 @@ export async function getProfileByNick(nick: string) {
     .maybeSingle<ProfileRow>();
 
   return profileRow ? getProfileByRow(profileRow, "") : null;
+}
+
+export async function listProfiles() {
+  if (isDemoMode) {
+    return demoProfiles;
+  }
+
+  const supabase = await createServerBackendClient();
+  if (!supabase) {
+    return [];
+  }
+
+  const { data: profileRows } = await supabase
+    .from("profiles")
+    .select("*")
+    .order("reliability_score", { ascending: false })
+    .returns<ProfileRow[]>();
+
+  return Promise.all((profileRows ?? []).map((row) => getProfileByRow(row, "")));
 }
 
 export async function updateMyProfile(input: ProfileUpdateInput) {
@@ -146,6 +181,13 @@ export async function updateMyProfile(input: ProfileUpdateInput) {
   const profile = await getViewerProfile();
   if (!profile) {
     throw new AppError("Perfil no disponible.", 404);
+  }
+
+  if (profile.nick !== input.nick) {
+    const available = await isNickAvailable(input.nick, authed.user.id);
+    if (!available) {
+      throw new AppError("Ese nick ya está en uso.", 409);
+    }
   }
 
   const catalog = await getCatalogRows();

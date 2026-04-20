@@ -34,7 +34,7 @@ export async function getDashboardSnapshot(profileId: string) {
   };
 }
 
-export async function listProfiles() {
+export async function listClanMemberProfiles() {
   const clans = await listClans();
   const members = (await Promise.all(clans.map((clan) => listClanMembers(clan.id)))).flat();
   return members.map((member) => member.profile);

@@ -25,16 +25,16 @@ export function AuthForm({
   const [state, formAction, pending] = useActionState(action, {});
 
   return (
-    <Card className="border-white/10 bg-white/5 text-white">
-      <CardHeader>
-        <CardTitle className="text-2xl">{title}</CardTitle>
-        <CardDescription className="text-slate-300">{description}</CardDescription>
+    <Card className="border border-red-400/20 bg-red-500/5 text-red-300/80 card-hover">
+      <CardHeader className="border-b border-red-400/20">
+        <CardTitle className="text-lg sm:text-xl font-black uppercase tracking-widest text-red-400">{title}</CardTitle>
+        <CardDescription className="text-xs sm:text-sm text-red-400/60 font-mono uppercase">{description}</CardDescription>
       </CardHeader>
-      <CardContent>
-        <form action={formAction} className="space-y-5">
+      <CardContent className="pt-6">
+        <form action={formAction} className="space-y-4">
           {fields.map((field) => (
             <div className="space-y-2" key={field.name}>
-              <Label htmlFor={field.name} className="text-slate-200">
+              <Label htmlFor={field.name} className="text-xs sm:text-sm text-red-400 font-black uppercase tracking-wider">
                 {field.label}
               </Label>
               <Input
@@ -42,17 +42,17 @@ export function AuthForm({
                 name={field.name}
                 type={field.type}
                 placeholder={field.placeholder}
-                className="border-white/10 bg-slate-950/70 text-white"
+                className="border border-red-400/20 bg-red-500/5 text-red-300/80 placeholder-red-400/40 font-mono text-xs sm:text-sm uppercase focus:border-red-400/40 focus:ring-red-400/20"
               />
             </div>
           ))}
           {state.message ? (
-            <div className="rounded-2xl border border-amber-400/20 bg-amber-400/10 px-4 py-3 text-sm text-amber-100">
+            <div className="border border-red-400/30 bg-red-500/15 px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-red-300/80 font-mono uppercase">
               {state.message}
             </div>
           ) : null}
-          <Button type="submit" className="w-full bg-amber-400 text-slate-950 hover:bg-amber-300" disabled={pending}>
-            {pending ? "Procesando..." : submitLabel}
+          <Button type="submit" className="w-full border border-red-400/40 bg-red-500/15 text-red-300 hover:bg-red-500/25 font-black text-xs uppercase card-hover" disabled={pending}>
+            {pending ? "PROCESANDO..." : submitLabel}
           </Button>
         </form>
       </CardContent>

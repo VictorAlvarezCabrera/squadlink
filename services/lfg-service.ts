@@ -1,6 +1,6 @@
 import { games as demoGames, lfgPosts as demoLfgPosts, profiles as demoProfiles } from "@/data/demo";
 import { AppError } from "@/lib/app-error";
-import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { createServerBackendClient } from "@/lib/backend/server";
 import type { PlatformCode } from "@/types/domain";
 
 import {
@@ -33,7 +33,7 @@ export async function listLfgPosts() {
     }));
   }
 
-  const supabase = await createServerSupabaseClient();
+  const supabase = await createServerBackendClient();
   const [{ data: lfgRows }, { data: lfgPlatforms }, { data: lfgLanguages }, catalog] = await Promise.all([
     supabase!.from("lfg_posts").select("*").returns<LfgPostRow[]>(),
     supabase!.from("lfg_platforms").select("*").returns<LfgPlatformRow[]>(),

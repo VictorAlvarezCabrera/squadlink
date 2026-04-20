@@ -1,14 +1,47 @@
 insert into auth.users (
-  id, instance_id, aud, role, email, encrypted_password, email_confirmed_at, raw_app_meta_data, raw_user_meta_data, created_at, updated_at
+  id, instance_id, aud, role, email, encrypted_password, email_confirmed_at, confirmation_token, recovery_token,
+  email_change_token_new, email_change, email_change_token_current, reauthentication_token, phone_change, phone_change_token,
+  raw_app_meta_data, raw_user_meta_data, created_at, updated_at
 )
 values
-  ('00000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'admin@squadlink.gg', crypt('demo12345', gen_salt('bf')), timezone('utc', now()), '{"provider":"email","providers":["email"]}', '{"nick":"ControlRoom"}', timezone('utc', now()), timezone('utc', now())),
-  ('00000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'lyra@squadlink.gg', crypt('demo12345', gen_salt('bf')), timezone('utc', now()), '{"provider":"email","providers":["email"]}', '{"nick":"LyraShot"}', timezone('utc', now()), timezone('utc', now())),
-  ('00000000-0000-0000-0000-000000000003', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'marco@squadlink.gg', crypt('demo12345', gen_salt('bf')), timezone('utc', now()), '{"provider":"email","providers":["email"]}', '{"nick":"MarcoRush"}', timezone('utc', now()), timezone('utc', now())),
-  ('00000000-0000-0000-0000-000000000004', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'ines@squadlink.gg', crypt('demo12345', gen_salt('bf')), timezone('utc', now()), '{"provider":"email","providers":["email"]}', '{"nick":"InesAnchor"}', timezone('utc', now()), timezone('utc', now())),
-  ('00000000-0000-0000-0000-000000000005', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'hugo@squadlink.gg', crypt('demo12345', gen_salt('bf')), timezone('utc', now()), '{"provider":"email","providers":["email"]}', '{"nick":"HugoOrbit"}', timezone('utc', now()), timezone('utc', now())),
-  ('00000000-0000-0000-0000-000000000006', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'nuevo@squadlink.gg', crypt('demo12345', gen_salt('bf')), timezone('utc', now()), '{"provider":"email","providers":["email"]}', '{"nick":"AsterLink"}', timezone('utc', now()), timezone('utc', now()))
-on conflict (id) do nothing;
+  ('00000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'admin@squadlink.gg', crypt('demo12345', gen_salt('bf')), timezone('utc', now()), '', '', '', '', '', '', '', '', '{"provider":"email","providers":["email"]}', '{"nick":"ControlRoom"}', timezone('utc', now()), timezone('utc', now())),
+  ('00000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'lyra@squadlink.gg', crypt('demo12345', gen_salt('bf')), timezone('utc', now()), '', '', '', '', '', '', '', '', '{"provider":"email","providers":["email"]}', '{"nick":"LyraShot"}', timezone('utc', now()), timezone('utc', now())),
+  ('00000000-0000-0000-0000-000000000003', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'marco@squadlink.gg', crypt('demo12345', gen_salt('bf')), timezone('utc', now()), '', '', '', '', '', '', '', '', '{"provider":"email","providers":["email"]}', '{"nick":"MarcoRush"}', timezone('utc', now()), timezone('utc', now())),
+  ('00000000-0000-0000-0000-000000000004', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'ines@squadlink.gg', crypt('demo12345', gen_salt('bf')), timezone('utc', now()), '', '', '', '', '', '', '', '', '{"provider":"email","providers":["email"]}', '{"nick":"InesAnchor"}', timezone('utc', now()), timezone('utc', now())),
+  ('00000000-0000-0000-0000-000000000005', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'hugo@squadlink.gg', crypt('demo12345', gen_salt('bf')), timezone('utc', now()), '', '', '', '', '', '', '', '', '{"provider":"email","providers":["email"]}', '{"nick":"HugoOrbit"}', timezone('utc', now()), timezone('utc', now())),
+  ('00000000-0000-0000-0000-000000000006', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'nuevo@squadlink.gg', crypt('demo12345', gen_salt('bf')), timezone('utc', now()), '', '', '', '', '', '', '', '', '{"provider":"email","providers":["email"]}', '{"nick":"AsterLink"}', timezone('utc', now()), timezone('utc', now()))
+on conflict (id) do update
+set
+  encrypted_password = excluded.encrypted_password,
+  email = excluded.email,
+  email_confirmed_at = excluded.email_confirmed_at,
+  confirmation_token = excluded.confirmation_token,
+  recovery_token = excluded.recovery_token,
+  email_change_token_new = excluded.email_change_token_new,
+  email_change = excluded.email_change,
+  email_change_token_current = excluded.email_change_token_current,
+  reauthentication_token = excluded.reauthentication_token,
+  phone_change = excluded.phone_change,
+  phone_change_token = excluded.phone_change_token,
+  raw_app_meta_data = excluded.raw_app_meta_data,
+  raw_user_meta_data = excluded.raw_user_meta_data,
+  updated_at = excluded.updated_at;
+
+insert into auth.identities (
+  id, provider_id, user_id, identity_data, provider, last_sign_in_at, created_at, updated_at
+)
+values
+  ('40000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', '{"sub":"00000000-0000-0000-0000-000000000001","email":"admin@squadlink.gg","nick":"ControlRoom","email_verified":true,"phone_verified":false}', 'email', timezone('utc', now()), timezone('utc', now()), timezone('utc', now())),
+  ('40000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000002', '{"sub":"00000000-0000-0000-0000-000000000002","email":"lyra@squadlink.gg","nick":"LyraShot","email_verified":true,"phone_verified":false}', 'email', timezone('utc', now()), timezone('utc', now()), timezone('utc', now())),
+  ('40000000-0000-0000-0000-000000000003', '00000000-0000-0000-0000-000000000003', '00000000-0000-0000-0000-000000000003', '{"sub":"00000000-0000-0000-0000-000000000003","email":"marco@squadlink.gg","nick":"MarcoRush","email_verified":true,"phone_verified":false}', 'email', timezone('utc', now()), timezone('utc', now()), timezone('utc', now())),
+  ('40000000-0000-0000-0000-000000000004', '00000000-0000-0000-0000-000000000004', '00000000-0000-0000-0000-000000000004', '{"sub":"00000000-0000-0000-0000-000000000004","email":"ines@squadlink.gg","nick":"InesAnchor","email_verified":true,"phone_verified":false}', 'email', timezone('utc', now()), timezone('utc', now()), timezone('utc', now())),
+  ('40000000-0000-0000-0000-000000000005', '00000000-0000-0000-0000-000000000005', '00000000-0000-0000-0000-000000000005', '{"sub":"00000000-0000-0000-0000-000000000005","email":"hugo@squadlink.gg","nick":"HugoOrbit","email_verified":true,"phone_verified":false}', 'email', timezone('utc', now()), timezone('utc', now()), timezone('utc', now())),
+  ('40000000-0000-0000-0000-000000000006', '00000000-0000-0000-0000-000000000006', '00000000-0000-0000-0000-000000000006', '{"sub":"00000000-0000-0000-0000-000000000006","email":"nuevo@squadlink.gg","nick":"AsterLink","email_verified":true,"phone_verified":false}', 'email', timezone('utc', now()), timezone('utc', now()), timezone('utc', now()))
+on conflict (provider_id, provider) do update
+set
+  identity_data = excluded.identity_data,
+  last_sign_in_at = excluded.last_sign_in_at,
+  updated_at = excluded.updated_at;
 
 insert into public.platforms (id, code, name) values
   ('10000000-0000-0000-0000-000000000001', 'pc', 'PC'),

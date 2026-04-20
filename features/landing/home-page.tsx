@@ -1,6 +1,7 @@
 import Link from "next/link";
 
-import { listEvents, listFeaturedClans, listLfgPosts } from "@/services/squadlink-service";
+import { supportedIntegrations } from "@/lib/supported-games";
+import { getCatalog, listEvents, listFeaturedClans, listLfgPosts } from "@/services/squadlink-service";
 import type { Clan } from "@/types/domain";
 
 import { SectionHeading } from "@/components/shared/section-heading";
@@ -9,97 +10,146 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export async function HomePage() {
-  const [featuredClans, events, lfgPosts] = await Promise.all([
+  const [featuredClans, events, lfgPosts, catalog] = await Promise.all([
     listFeaturedClans(),
     listEvents(),
     listLfgPosts(),
+    getCatalog(),
   ]);
 
   return (
-    <div className="space-y-24 pb-24">
-      <section className="overflow-hidden border-b border-white/10">
-        <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 md:py-20 lg:px-8 lg:py-24">
-          <div className="grid gap-12 rounded-[2rem] border border-red-500/20 bg-[linear-gradient(140deg,rgba(28,12,14,0.95)_0%,rgba(12,12,13,0.98)_58%,rgba(8,8,8,1)_100%)] p-6 sm:p-8 lg:grid-cols-[1.1fr_0.9fr] lg:p-10">
-          <div className="space-y-8">
-            <Badge className="bg-red-500/15 text-red-100">MVP serio para DAW con Next.js + Supabase</Badge>
-            <div className="space-y-5">
-              <h1 className="max-w-3xl text-4xl font-semibold tracking-tight text-white sm:text-5xl lg:text-6xl">
-                Encuentra el clan adecuado, organiza squads y mide el encaje antes de entrar.
-              </h1>
-              <p className="max-w-2xl text-lg leading-8 text-zinc-300">
-                SquadLink conecta jugadores y clanes por juego, plataforma, horario, idioma, rol y fiabilidad.
-                Sin ruido de red social. Con lógica defendible.
-              </p>
+    <div className="space-y-16 pb-16 sm:space-y-24 sm:pb-24">
+      <section className="overflow-hidden rounded-[2rem] border border-cyan-300/10 bg-slate-950/60 shadow-[0_30px_120px_-60px_rgba(34,211,238,0.5)]">
+        <div className="mx-auto w-full max-w-full px-3 py-12 sm:px-6 sm:py-16 md:py-20 lg:px-8 lg:py-24">
+          <div className="grid gap-8 rounded-[1.5rem] border border-cyan-300/15 bg-[linear-gradient(135deg,rgba(15,23,42,0.92),rgba(17,24,39,0.84),rgba(8,47,73,0.7))] p-4 sm:gap-12 sm:p-6 md:p-8 lg:grid-cols-[1.1fr_0.9fr]">
+            <div className="space-y-6 sm:space-y-8">
+              <Badge className="border border-cyan-300/20 bg-cyan-300/12 text-xs font-semibold uppercase tracking-[0.28em] text-cyan-100">
+                MVP social gamer · Next.js + Supabase
+              </Badge>
+              <div className="space-y-4 sm:space-y-5">
+                <h1 className="max-w-3xl text-3xl leading-tight font-black tracking-tight text-white sm:text-4xl md:text-5xl lg:text-6xl">
+                  Descubre jugadores compatibles, muestra stats verificables y mueve tu comunidad.
+                </h1>
+                <p className="max-w-2xl text-sm leading-6 text-slate-200/78 sm:text-base sm:leading-8">
+                  SquadLink conecta perfil publico, descubrimiento, clanes, eventos y Busco grupo (LFG). Catalogo amplio de juegos,
+                  cuentas enlazadas solo para APIs gratuitas y viables.
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2 sm:gap-3">
+                <Link href="/registro">
+                  <Button size="lg" className="card-hover border border-cyan-300/30 bg-cyan-300/18 text-xs font-semibold tracking-[0.24em] text-cyan-100 uppercase hover:bg-cyan-300/28">
+                    Crear cuenta
+                  </Button>
+                </Link>
+                <Link href="/players">
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    className="card-hover border border-slate-300/20 text-xs font-semibold tracking-[0.24em] text-slate-100 uppercase hover:border-cyan-300/40 hover:bg-cyan-300/10"
+                  >
+                    Explorar jugadores
+                  </Button>
+                </Link>
+              </div>
+              <div className="grid grid-cols-3 gap-2 sm:gap-4">
+                <Stat label="Clanes" value={String(featuredClans.length)} />
+                <Stat label="Eventos" value={String(events.length)} />
+                <Stat label="LFG activos" value={String(lfgPosts.length)} />
+              </div>
             </div>
-            <div className="flex flex-wrap gap-3">
-              <Link href="/registro">
-                <Button size="lg" className="bg-red-500 text-white hover:bg-red-400">
-                  Crear cuenta
-                </Button>
-              </Link>
-              <Link href="/clanes">
-                <Button size="lg" variant="outline" className="border-white/15 bg-white/5 text-white hover:bg-white/10">
-                  Explorar clanes
-                </Button>
-              </Link>
-            </div>
-            <div className="grid gap-4 sm:grid-cols-3">
-              <Stat label="Clanes demo" value="3" />
-              <Stat label="Eventos activos" value={String(events.length)} />
-              <Stat label="Publicaciones LFG" value={String(lfgPosts.length)} />
-            </div>
-          </div>
 
-          <div className="grid gap-4 rounded-[1.5rem] border border-white/10 bg-black/35 p-4">
-            {featuredClans.map((clan: Clan) => (
-              <Card key={clan.id} className="border-white/10 bg-black/50 text-white">
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle>{clan.name}</CardTitle>
-                    <Badge variant="secondary" className="bg-white/10 text-white">
-                      {clan.playstyle}
-                    </Badge>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <p className="text-sm text-zinc-300">{clan.tagline}</p>
-                  <div className="flex flex-wrap gap-2 text-xs text-zinc-300">
-                    {clan.languages.map((language: string) => (
-                      <Badge key={language} variant="outline" className="border-white/10 text-zinc-200">
-                        {language.toUpperCase()}
+            <div className="grid gap-3 border-l border-cyan-300/10 pl-4 sm:gap-4 sm:pl-6">
+              {featuredClans.map((clan: Clan) => (
+                <Card key={clan.id} className="card-hover border border-slate-300/10 bg-white/5 text-white">
+                  <CardHeader className="pb-2 sm:pb-3">
+                    <div className="flex flex-col items-start justify-between gap-2 sm:flex-row sm:items-center">
+                      <CardTitle className="text-sm font-semibold tracking-wide text-white">{clan.name}</CardTitle>
+                      <Badge variant="secondary" className="border border-cyan-300/20 bg-cyan-300/15 text-xs font-medium text-cyan-100 uppercase">
+                        {clan.playstyle}
                       </Badge>
-                    ))}
-                  </div>
-                  <Link href={`/clanes/${clan.slug}`} className="text-sm font-medium text-red-300">
-                    Ver detalle
-                  </Link>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-2 text-xs sm:space-y-3">
+                    <p className="leading-tight text-slate-300/80">{clan.tagline}</p>
+                    <div className="flex flex-wrap gap-1 sm:gap-2">
+                      {clan.languages.map((language: string) => (
+                        <Badge key={language} variant="outline" className="border border-slate-300/15 text-xs text-slate-200/85 uppercase">
+                          {language}
+                        </Badge>
+                      ))}
+                    </div>
+                    <Link href={`/clanes/${clan.slug}`} className="text-xs font-medium tracking-[0.2em] text-cyan-100/80 uppercase transition-colors duration-300 hover:text-cyan-100">
+                      Ver clan
+                    </Link>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <section className="mx-auto w-full max-w-full px-3 sm:px-6 lg:px-8">
         <SectionHeading
-          eyebrow="Cómo funciona"
-          title="Tres flujos claros para enseñar producto, arquitectura y negocio"
-          description="Descubrir clanes, organizar operativa de equipo y recomendar encaje con una fórmula transparente."
+          eyebrow="Base del producto"
+          title="Identidad, descubrimiento, comunidad y stats enlazadas"
+          description="SquadLink no es un tracker universal ni un Discord clonado. Producto se centra en perfil social util, matching visible, clanes vivos y juegos con integraciones defendibles."
         />
-        <div className="mt-10 grid gap-6 lg:grid-cols-3">
+        <div className="mt-8 grid gap-4 sm:mt-10 sm:gap-6 lg:grid-cols-3">
           <FeatureCard
-            title="Perfil operativo"
-            description="Cada jugador define juegos, roles, plataforma, idiomas, disponibilidad semanal y reputación."
+            title="Perfil publico util"
+            description="Avatar, bio, idiomas, plataformas, horarios, juegos favoritos, cuentas enlazadas y actividad reciente."
           />
           <FeatureCard
-            title="Clanes y eventos"
-            description="Líderes publican requisitos, aceptan solicitudes y crean eventos con control de asistencia."
+            title="Clanes, eventos y LFG"
+            description="Comunidad persistente, actividad planificada y publicaciones rapidas para jugar ahora, hoy o este fin de semana."
           />
           <FeatureCard
-            title="Compatibilidad defendible"
-            description="La puntuación 0-100 se desglosa por horario, juego, plataforma, rol, idioma y fiabilidad."
+            title="Compatibilidad visible"
+            description="Score explicable en tarjetas y sugerencias. Mismo juego, mismo horario, idioma, rol y actividad reciente."
           />
+        </div>
+      </section>
+
+      <section className="mx-auto w-full max-w-full px-3 sm:px-6 lg:px-8">
+        <SectionHeading
+          eyebrow="Catalogo y APIs"
+          title="Juegos visibles amplios, cuentas enlazadas solo si API es viable"
+          description="Catalogo general alimentado por RAWG. Vinculacion y stats reservadas a proveedores gratuitos y defendibles para MVP."
+        />
+        <div className="mt-8 grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
+          <Card className="border border-slate-300/10 bg-white/5 text-white">
+            <CardHeader>
+              <CardTitle className="text-lg text-white">Catalogo actual</CardTitle>
+            </CardHeader>
+            <CardContent className="grid gap-3 sm:grid-cols-2">
+              {catalog.games.slice(0, 6).map((game) => (
+                <Link key={game.id} href={`/games/${game.slug}`} className="card-hover rounded-xl border border-slate-300/10 bg-slate-950/70 p-4">
+                  <p className="text-sm font-semibold text-white">{game.name}</p>
+                  <p className="mt-1 text-sm text-slate-300/75">{game.genre}</p>
+                </Link>
+              ))}
+            </CardContent>
+          </Card>
+
+          <Card className="border border-slate-300/10 bg-white/5 text-white">
+            <CardHeader>
+              <CardTitle className="text-lg text-white">Integraciones MVP aprobadas</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {supportedIntegrations.filter((entry) => entry.type === "stats").map((entry) => (
+                <div key={entry.slug} className="rounded-xl border border-slate-300/10 bg-slate-950/70 p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-sm font-semibold text-white">{entry.gameName}</p>
+                    <Badge className="border border-cyan-300/20 bg-cyan-300/15 text-cyan-100">
+                      {entry.state === "approved_limited" ? "Soporte con limites" : "Soporte MVP"}
+                    </Badge>
+                  </div>
+                  <p className="mt-2 text-sm text-slate-300/75">{entry.summary}</p>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
         </div>
       </section>
     </div>
@@ -108,21 +158,21 @@ export async function HomePage() {
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-3xl border border-white/10 bg-black/35 p-5">
-      <p className="text-sm text-zinc-300">{label}</p>
-      <p className="mt-2 text-3xl font-semibold text-white">{value}</p>
+    <div className="card-hover rounded-xl border border-slate-300/10 bg-white/5 p-3 sm:p-5">
+      <p className="text-xs font-semibold tracking-[0.24em] text-cyan-100/80 uppercase">{label}</p>
+      <p className="mt-1 text-2xl font-black text-white sm:mt-2 sm:text-3xl">{value}</p>
     </div>
   );
 }
 
 function FeatureCard({ title, description }: { title: string; description: string }) {
   return (
-    <Card className="border-white/10 bg-black/35 text-white">
+    <Card className="card-hover border border-slate-300/10 bg-white/5 text-white">
       <CardHeader>
-        <CardTitle>{title}</CardTitle>
+        <CardTitle className="text-base font-semibold tracking-tight text-white">{title}</CardTitle>
       </CardHeader>
       <CardContent>
-        <p className="leading-7 text-zinc-300">{description}</p>
+        <p className="text-sm leading-6 text-slate-300/78">{description}</p>
       </CardContent>
     </Card>
   );
